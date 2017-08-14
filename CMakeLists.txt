@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.2)
+set (CMAKE_CXX_STANDARD 11)
+project( extract_cell )
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+add_executable( extract_cell extract_cell.cpp )
+target_link_libraries( extract_cell ${OpenCV_LIBS} )
