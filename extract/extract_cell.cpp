@@ -25,6 +25,10 @@ using namespace std;
 const int HOUGH_LINE_THRESHOLD = 1000;
 /* End of threshold */
 
+/* Debug purpose */
+#define ENABLE_REMOVE_BORDER 1
+
+
 std::string INPUT_FILE_NAME_OPTION = "--inputFileName";
 std::string OUTPUT_FOLDER_OPTION = "--outputFolder";
 std::string DEBUG_OPTION = "--debug";
@@ -138,7 +142,7 @@ void findCells(vector<Vec2f>& lines, Mat& img, int numRow, const std::string& in
             Mat kernel = (Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
             preprocessing_cell(miniMat, outerBox, kernel);
 
-            #if 0 
+            #if ENABLE_REMOVE_BORDER 
                 Point cp1, cp2;
                 getCellBorder(outerBox, 0.8, cp1, cp2);
 
