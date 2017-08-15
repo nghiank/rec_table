@@ -14,6 +14,13 @@ void preprocessing(Mat& img, Mat& outerBox, Mat& kernel) {
     dilate(outerBox, outerBox, kernel);
 }
 
+void preprocessing_cell(Mat& img, Mat& outerBox, Mat& kernel) {
+    GaussianBlur(img, img, Size(7,7), 0);
+    adaptiveThreshold(img, outerBox, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 7, 5);
+    bitwise_not(outerBox, outerBox);
+    dilate(outerBox, outerBox, kernel);
+}
+
 Point findLargestBlob(cv::Mat& outerBox, double gray_threshold) {
     int max=-1;
     Point maxPt;
