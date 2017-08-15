@@ -2,4 +2,5 @@ CMakeFiles
 CMakeCache.txt
 cmake_install.cmake
 *.o
-extract_cell
+../extract_cell
+../segment
