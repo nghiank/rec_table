@@ -3,17 +3,12 @@ if(COMMAND pkg_check_modules)
   pkg_check_modules(Tesseract tesseract lept)
 endif()
 if(NOT Tesseract_FOUND)
-  find_path(Tesseract_INCLUDE_DIR tesseract/baseapi.h
-    HINTS
-    /Users/nghiaround/homebrew/Cellar/tesseract/3.05.01/include)
-
-  find_library(Tesseract_LIBRARY NAMES tesseract
-    HINTS
-    /Users/nghiaround/homebrew/Cellar/tesseract/3.05.01/lib)
-
-  find_library(Lept_LIBRARY NAMES lept
-    HINTS
-    /Users/nghiaround/homebrew/Cellar/leptonica/1.74.4/lib)
+  find_path(Tesseract_INCLUDE_DIR tesseract/baseapi.h 
+    PATHS ${TESSERACT_PREFIX}/include /usr/local/include NO_DEFAULT_PATH)
+  find_library(Tesseract_LIBRARY NAMES tesseract 
+    PATHS ${TESSERACT_PREFIX}/lib /usr/local/lib NO_DEFAULT_PATH)
+  find_library(Lept_LIBRARY NAMES lept 
+    PATHS ${LEPT_PREFIX}/lib /usr/local/lib NO_DEFAULT_PATH)
 
   if(Tesseract_INCLUDE_DIR AND Tesseract_LIBRARY AND Lept_LIBRARY)
     set(Tesseract_INCLUDE_DIRS ${Tesseract_INCLUDE_DIR})
