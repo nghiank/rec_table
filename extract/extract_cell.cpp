@@ -137,7 +137,7 @@ void findCells(vector<Vec2f>& lines, Mat& img, int numRow, const std::string& in
             getCellBorder(outerBox, 0.8, cp1, cp2);
 
             cv::Rect inside(cp1, cp2);
-            outerBox = miniMat(inside);
+            outerBox = outerBox(inside);
             imwrite(st, outerBox);
         }
     }
