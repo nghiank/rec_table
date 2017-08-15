@@ -93,18 +93,21 @@ double findExtremeLines(vector<Vec2f>& lines, Mat& img, Point2f src[4], Point2f 
             if(xIntercept>rightXIntercept) {
                 rightEdge = current;
                 rightXIntercept = xIntercept;
-            } else if(xIntercept<=leftXIntercept) {
+            } 
+            if(xIntercept<=leftXIntercept) {
                 leftEdge = current;
                 leftXIntercept = xIntercept;
             }
         }
     }
-    //drawLine(topEdge, img, CV_RGB(0,0,0));
-    //drawLine(bottomEdge, img, CV_RGB(0,0,0));
-    //drawLine(leftEdge, img, CV_RGB(0,0,0));
-    //drawLine(rightEdge, img, CV_RGB(0,0,0));
-    //imshow("original_image", img);
-    //cv::waitKey();
+    #if 0
+    drawLine(topEdge, img, CV_RGB(0,0,0));
+    drawLine(bottomEdge, img, CV_RGB(0,0,0));
+    drawLine(leftEdge, img, CV_RGB(0,0,0));
+    drawLine(rightEdge, img, CV_RGB(0,0,0));
+    imshow("original_image", img);
+    cv::waitKey();
+    #endif 
 
     Point left1, left2, right1, right2, bottom1, bottom2, top1, top2;
     

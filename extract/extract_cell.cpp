@@ -21,6 +21,10 @@
 using namespace cv;
 using namespace std;
 
+/* Important threshold*/
+const int HOUGH_LINE_THRESHOLD = 1000;
+/* End of threshold */
+
 std::string INPUT_FILE_NAME_OPTION = "--inputFileName";
 std::string OUTPUT_FOLDER_OPTION = "--outputFolder";
 std::string DEBUG_OPTION = "--debug";
@@ -97,14 +101,15 @@ void findCells(vector<Vec2f>& lines, Mat& img, int numRow, const std::string& in
     Mat undistorted ;
     cv::warpPerspective(original_img, undistorted, cv::getPerspectiveTransform(src, dst), Size(maxLength, maxLength));
     imwrite(outputFolder + "/undistorted.jpg", undistorted);
-    vector<double> p = {1, 1, 1, 2, 1, 1, 1};
+    //vector<double> p = {1, 1, 1, 2, 1, 1, 1};
+    vector<double> p = {2, 2, 6, 6, 4, 2, 2,     2, 2, 6, 6, 4, 2, 2};
     
     double sum = 0;
     double gap = maxLength / numRow;
     for(int i = 0; i < p.size(); ++i) {
         sum += p[i];
     }
-    double halfLineGap = 0.083   * maxLength / (2.0*sum);
+    double halfLineGap = 0.08   *  maxLength / sum;
     for(int i = 0; i < numRow; ++i) {
         Point p0, p1;
         p0.x = 0;
@@ -133,11 +138,13 @@ void findCells(vector<Vec2f>& lines, Mat& img, int numRow, const std::string& in
             Mat kernel = (Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
             preprocessing_cell(miniMat, outerBox, kernel);
 
-            Point cp1, cp2;
-            getCellBorder(outerBox, 0.8, cp1, cp2);
+            #if 0 
+                Point cp1, cp2;
+                getCellBorder(outerBox, 0.8, cp1, cp2);
 
-            cv::Rect inside(cp1, cp2);
-            outerBox = outerBox(inside);
+                cv::Rect inside(cp1, cp2);
+                outerBox = outerBox(inside);
+            #endif
             imwrite(st, outerBox);
         }
     }
@@ -145,7 +152,7 @@ void findCells(vector<Vec2f>& lines, Mat& img, int numRow, const std::string& in
 }
 
 void detectLine(Mat& outerBox, Mat& img, vector<Vec2f>& lines){
-    HoughLines(outerBox, lines, 1, CV_PI/180, 1000);
+    HoughLines(outerBox, lines, 1, CV_PI/180, HOUGH_LINE_THRESHOLD);
     for(int i=0;i<lines.size();i++) {
         drawLine(lines[i], outerBox, CV_RGB(255,255,255));
     }
@@ -190,15 +197,17 @@ int main(int argc, char** argv)
     Mat kernel = (Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
     Mat outerBox = Mat(img.size(), CV_8UC1);
 
+    printf("Preprocessing img");
     preprocessing(img,outerBox, kernel);
     imwrite(outputFolder + "/preprocessing.jpg", outerBox);
 
+    printf("Find table blob");
     findTableBlob(outerBox, kernel);
     imwrite(outputFolder + "/findBlob.jpg", outerBox);
 
     vector<Vec2f> lines;
     detectLine(outerBox, img, lines);
 
-    int numRows = 20;
+    int numRows = 30;
     findCells(lines, img, numRows, fileName, outputFolder);
 }
