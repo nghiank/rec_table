@@ -1,0 +1,1 @@
+make && ./extract_cell --inputFileName /Users/nghiaround/Desktop/d.png --outputFolder /Users/nghiaround/Desktop/tmp
