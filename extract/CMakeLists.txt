@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 set (CMAKE_CXX_STANDARD 11)
-project( extract_cell )
+
+project( ExtractWord )
 find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 add_executable( extract_cell extract_cell.cpp preprocessing.cpp debug_util.cpp line_util.cpp)
