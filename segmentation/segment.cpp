@@ -1,3 +1,14 @@
+/*
+    Process the whole folder to break image into smaller images 
+    which has individual characters.
+    Sample: 
+    make && 
+    TESSDATA_PREFIX="/Users/nghiaround/homebrew/Cellar/tesseract/3.05.01/share/tessdata" ./segment 
+    --n 139 
+    --inputFolder /Users/nghiaround/Desktop/tmp 
+    --outputFolder /Users/nghiaround/Desktop/out 
+    --fileNamePrefix file
+ */
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -16,8 +27,7 @@ const string NUMBER_FILES_OPTION = "--n";
 
 char* getCmdOption(char ** begin, char ** end, const std::string & option) {
     char ** itr = std::find(begin, end, option);
-    if (itr != end && ++itr != end)
-    {
+    if (itr != end && ++itr != end) {
         return *itr;
     }
     return 0;
@@ -111,9 +121,8 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Could not initialize tesseract.\n");
         exit(1);
     }
-    
     string input_file_prefix = inputFolder + "/" + fileNamePrefix + "%d.png";
-    string full_file_name_prefix = inputFolder + "/" + fileNamePrefix + "%d_sub_";
+    string full_file_name_prefix = outputFolder + "/" + fileNamePrefix + "%d_sub_";
     char fileName[MAX_FILE_LENGTH];
     char outputFileName[MAX_FILE_LENGTH];
     for(int i = 0; i < num_of_files; ++i) {

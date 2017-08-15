@@ -1,0 +1,1 @@
+cmake . -DTESSERACT_PREFIX=/Users/nghiaround/homebrew/Cellar/tesseract/3.05.01 -DLEPT_PREFIX=/Users/nghiaround/homebrew/Cellar/leptonica/1.74.4
