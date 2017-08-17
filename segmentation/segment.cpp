@@ -3,11 +3,7 @@
     which has individual characters.
     Sample: 
     make && 
-    TESSDATA_PREFIX="/Users/nghiaround/homebrew/Cellar/tesseract/3.05.01/share/tessdata" ./segment 
-    --n 139 
-    --inputFolder /Users/nghiaround/Desktop/tmp 
-    --outputFolder /Users/nghiaround/Desktop/out 
-    --fileNamePrefix file
+    TESSDATA_PREFIX="/Users/nghiaround/homebrew/Cellar/tesseract/3.05.01/share/tessdata" ./segment --n 139 --inputFolder /Users/nghiaround/Desktop/tmp --outputFolder /Users/nghiaround/Desktop/out --fileNamePrefix file
  */
 #include <string>
 #include <sstream>
@@ -121,6 +117,7 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Could not initialize tesseract.\n");
         exit(1);
     }
+    api->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
     string input_file_prefix = inputFolder + "/" + fileNamePrefix + "%d.png";
     string full_file_name_prefix = outputFolder + "/" + fileNamePrefix + "%d_sub_";
     char fileName[MAX_FILE_LENGTH];
