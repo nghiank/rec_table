@@ -100,7 +100,7 @@ double findExtremeLines(vector<Vec2f>& lines, Mat& img, Point2f src[4], Point2f 
             }
         }
     }
-    #if 0
+    #if 1
     drawLine(topEdge, img, CV_RGB(0,0,0));
     drawLine(bottomEdge, img, CV_RGB(0,0,0));
     drawLine(leftEdge, img, CV_RGB(0,0,0));

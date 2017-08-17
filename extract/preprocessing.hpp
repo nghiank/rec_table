@@ -10,6 +10,7 @@
 #define preprocessing_hpp
 
 #include <opencv2/opencv.hpp>
+#include "constants.hpp"
 
 //Preprocessing the whole image before processing.
 void preprocessing(cv::Mat& img, cv::Mat& outerBox, cv::Mat& kernel);
@@ -18,7 +19,7 @@ void preprocessing(cv::Mat& img, cv::Mat& outerBox, cv::Mat& kernel);
 void preprocessing_cell(cv::Mat& img, cv::Mat& outerBox, cv::Mat& kernel);
 
 //Find largest connected blob in image.
-cv::Point findLargestBlob(cv::Mat& outerBox, double gray_threshold = 100);
+cv::Point findLargestBlob(cv::Mat& outerBox, double gray_threshold = GRAY_THRESHOLD);
 
 //Find the table blob.
 void findTableBlob(cv::Mat& outerBox, cv::Mat& kernel);

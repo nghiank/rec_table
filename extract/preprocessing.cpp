@@ -15,10 +15,10 @@ void preprocessing(Mat& img, Mat& outerBox, Mat& kernel) {
 }
 
 void preprocessing_cell(Mat& img, Mat& outerBox, Mat& kernel) {
-    GaussianBlur(img, img, Size(7,7), 0);
-    adaptiveThreshold(img, outerBox, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 7, 5);
+    GaussianBlur(img, img, Size(3,3), 0);
+    adaptiveThreshold(img, outerBox, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 3, 5);
     bitwise_not(outerBox, outerBox);
-    dilate(outerBox, outerBox, kernel);
+    //dilate(outerBox, outerBox, kernel);
 }
 
 Point findLargestBlob(cv::Mat& outerBox, double gray_threshold) {
@@ -43,7 +43,7 @@ void makeOtherBlack(Mat& outerBox, Point& maxPt) {
     for(int y=0;y<outerBox.size().height;y++) {
         uchar *row = outerBox.ptr(y);
         for(int x=0;x<outerBox.size().width;x++) {
-            if(row[x]==INTERMEDIATE_GRAY && x!=maxPt.x && y!=maxPt.y) {
+            if(row[x]!=0 && row[x]<=GRAY_THRESHOLD) {
                 int area = floodFill(outerBox, Point(x,y), CV_RGB(0,0,0));
             }
         }
@@ -52,7 +52,18 @@ void makeOtherBlack(Mat& outerBox, Point& maxPt) {
 
 void findTableBlob(Mat& outerBox, Mat& kernel) {
     Point maxPt = findLargestBlob(outerBox);
+    cout << "maxPt " << maxPt << endl;
     floodFill(outerBox, maxPt, CV_RGB(255,255,255));
     makeOtherBlack(outerBox, maxPt);
-    erode(outerBox, outerBox, kernel);
+
+    #if 0 //Debug
+    for(int y=0;y<outerBox.size().height;y++) {
+        uchar *row = outerBox.ptr(y);
+        for(int x=0;x<outerBox.size().width;x++) {
+            if (row[x] != 0  && row[x] != 255) {
+                printf("OHNOW %d\n", row[x]);
+            }
+        }
+    }
+    #endif
 }

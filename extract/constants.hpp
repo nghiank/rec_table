@@ -11,6 +11,6 @@
 
 #include <opencv2/opencv.hpp>
 
-cv::Mat KERNEL = (cv::Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
+#define GRAY_THRESHOLD 100
 
 #endif /* constants_hpp */
