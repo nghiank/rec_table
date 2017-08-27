@@ -26,6 +26,7 @@ const int HOUGH_LINE_THRESHOLD = 500;
 
 /* Debug purpose */
 #define ENABLE_REMOVE_BORDER 1
+#define DEBUG 0
 
 
 std::string INPUT_FILE_NAME_OPTION = "--inputFileName";
@@ -89,11 +90,12 @@ void getCellBorder(const Mat& outerBox, double percent_threshold, Point& cp1, Po
         yDown++;
     }
     yDown--;
-    cp1.x = xLeft + 3;
-    cp1.y = yUp + 3;
+    int sz = 7;
+    cp1.x = xLeft + sz;
+    cp1.y = yUp + sz;
 
-    cp2.x = xRight - 3;
-    cp2.y = yDown - 3;
+    cp2.x = xRight - sz;
+    cp2.y = yDown - sz;
 }
 
 double findDstCorners(Point2f src[4], Point2f dst[4]) {
@@ -168,6 +170,24 @@ void detectBoundary(const Mat& img, const Point& p, Point& p0, Point& p1) {
     //Move left
 }
 
+bool isBlankCell(const Mat& img) {
+    int cnt = 0;
+    for(int y=0;y<img.size().height;y++) {
+        const uchar *row = img.ptr(y);
+        for(int x=0;x<img.size().width;x++) {
+            if (row[x] > GRAY_THRESHOLD) {
+                cnt++;
+                if (cnt > 20) {
+                    cout << cnt << endl;
+                    return false;
+                }
+            }
+        }
+    }
+    cout << endl;
+    return true;
+}
+
 void findCells(
     Mat& img, Mat& outerBox, 
     int numRow, 
@@ -184,9 +204,9 @@ void findCells(
     cv::warpPerspective(original_img, undistorted, cv::getPerspectiveTransform(src, dst), Size(maxLength, maxLength));
     threshold(undistorted, outerBox, GRAY_THRESHOLD, 255, THRESH_BINARY);
     bitwise_not(outerBox, outerBox);
+    dilate(outerBox, outerBox, kernel);
     findTableBlob(outerBox, kernel);
-    imwrite(outputFolder + "/outerBox_undistortoed.png", outerBox);
-    #if 1 
+    #if 0 
     bool found = false;
     for(int y=0;y<outerBox.size().height;y++) {
         uchar *row = outerBox.ptr(y);
@@ -201,17 +221,18 @@ void findCells(
     }
     #endif 
 
-
     imwrite(outputFolder + "/undistorted.jpg", undistorted);
     imwrite(outputFolder + "/undistorted_processed.jpg", outerBox);
-    //vector<double> p = {1, 1, 1, 2, 1, 1, 1};
-    vector<double> p = {2, 2, 6, 6, 4, 2, 2,  2, 2, 6, 6, 4, 2, 2};
+    vector<double> p = {1, 4, 3, 3, 1, 1, 1, 4, 3, 3, 1, 1};
     
-    double sum = 0;
+    int sum = 0;
+    printf("Value of maxLengt = %lf\n", maxLength);
     double gap = maxLength / numRow;
     for(int i = 0; i < p.size(); ++i) {
         sum += p[i];
     }
+    printf("Number of cell per row = %d\n", sum);
+    double col_gap = maxLength / (double)sum;
     for(int i = 0; i < numRow; ++i) {
         Point p0, p1;
         p0.x = 0;
@@ -219,32 +240,39 @@ void findCells(
 
         //Skip the black part
         #if 1 
-        int r = p0.y;
-        // To avoid the full black line on top or bottom
-        if (i == 0) {
-           r = gap / 2; 
-        } else {
-           r -= gap / 2;
-        }
-        const uchar *row = outerBox.ptr(r);
-        while(row[p0.x] == 0) {
-            //printf("%d %d\n", p0.x, row[p0.x]);
-            p0.x++;
-        }
-        int last_col = outerBox.size().width - 1;
-        double newLength = maxLength - p0.x;
-        while(row[last_col] == 0) {
-            --last_col;
-            --newLength;
-        }
+            int r = p0.y;
+            // To avoid the full black line on top or bottom
+            if (i == 0) {
+                r = gap / 2; 
+            } else {
+                r -= gap / 2;
+            }
+            const uchar *row = outerBox.ptr(r);
+            while(row[p0.x] == 0) {
+                //printf("%d %d\n", p0.x, row[p0.x]);
+                p0.x++;
+            }
+            int last_col = outerBox.size().width - 1;
+            double newLength = maxLength - p0.x;
+            while(row[last_col] == 0) {
+                --last_col;
+                --newLength;
+            }
         #else 
-        double newLength = maxLength ;
+            double newLength = maxLength ;
         #endif 
         double halfLineGap = 0.08   *  newLength / sum;
-        printf("row %d value of p0.x = %d\n", i, p0.x);
+        //printf("row %d value of p0.x = %d\n", i, p0.x);
         p1.y = p0.y + gap;
-        for(int j = 0; j < p.size(); ++j) {
-            p1.x = p0.x + (((double)p[j]/sum) * (double)newLength) ;
+        //We only run first cell for first row 
+        int n = (i == 0) ? 1 : sum;
+        for(int j = 0; j < n; ++j) {
+            char st[100];
+            std::string fileName = outputFolder + "/file%lu.png";
+            sprintf(st, fileName.c_str(), i * sum + j);
+            
+            p1.x = p0.x + col_gap;
+            //printf("j = %d, p1.x = %d\n", j, p1.x);
             //extract cell
             Point p2;
             p2.x = p1.x + halfLineGap;
@@ -252,37 +280,31 @@ void findCells(
             if (i == numRow - 1) {
                 p2.y = p1.y;
             }
-            if (j == p.size() -1) {
+            if (j == n - 1) {
                 p2.x = p1.x;
             }
             cv::Rect rect(p0, p2);
-
-            #if 1  // Old way - getting the rect
-            Mat miniMat = undistorted(rect);
-            //Mat miniMat = outerBox(rect);
-            p0.x = p1.x;
-            char st[100];
-            std::string fileName = outputFolder + "/file%lu.png";
-            sprintf(st, fileName.c_str(), i * p.size() + j);
-        
-            Mat outerBox = Mat(img.size(), CV_8UC1);
-            Mat kernel = (Mat_<uchar>(3,3) << 1,1,1,1,1,1,1,1,1);
-            preprocessing_cell(miniMat, outerBox, kernel);
-
-                #if ENABLE_REMOVE_BORDER 
-                Point cp1, cp2;
-                getCellBorder(outerBox, 0.8, cp1, cp2);
-
-                cv::Rect inside(cp1, cp2);
-                outerBox = outerBox(inside);
-                #endif
-            imwrite(st, outerBox);
-            #else 
-            detectBoundary(
-                outerBox, 
-                Point((p0.x + p2.x) / 2, (p0.y + p2.y) / 2),
-                bp0, bp1);
+            Mat raw_box = undistorted(rect);
+            Mat miniMat = outerBox(rect);
+            #if DEBUG 
+            imwrite(string(st) + "_beforeRemoving.png", miniMat);
             #endif
+            p0.x = p1.x;
+        
+            Point cp1, cp2;
+            getCellBorder(miniMat, 0.8, cp1, cp2);
+
+            cv::Rect inside(cp1, cp2);
+            Mat box_cell = raw_box(inside);
+            Mat final_box_cell;
+            preprocessing_cell(box_cell, final_box_cell, kernel);
+            #if DEBUG
+            imwrite(string(st) + "_rawBox.png", box_cell);
+            #endif
+            cout << st << " : ";
+            if (!isBlankCell(final_box_cell)) {
+                imwrite(st, final_box_cell);
+            }
         }
     }
     
@@ -319,10 +341,6 @@ void findCellUsingContour(Mat img, Mat outerBox) {
         if (!isContourConvex(approx)) {
             continue;
         }
-        /*
-        for(int i = 0; i < approx.size(); ++i) {
-            cv::line(drawing, approx[i], approx[(i+1) % 4], COLOR);
-        }*/
         imshow( "Contours", drawing);
         double area = contourArea(approx);
         if (max_area < area) {
@@ -380,6 +398,6 @@ int main(int argc, char** argv)
     findTableBlob(outerBox, kernel);
     imwrite(outputFolder + "/findBlob.jpg", outerBox);
 
-    int numRows = 30;
+    int numRows = 31;
     findCells(img, outerBox, numRows, fileName, outputFolder);
 }

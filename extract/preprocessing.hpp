@@ -13,7 +13,11 @@
 #include "constants.hpp"
 
 //Preprocessing the whole image before processing.
-void preprocessing(cv::Mat& img, cv::Mat& outerBox, cv::Mat& kernel);
+void preprocessing(
+    cv::Mat& img, cv::Mat& outerBox, cv::Mat& kernel,
+    int gaussian_size = 7, 
+    int adaptiveThresholdSize = 11, 
+    int adaptiveThresholdOffset = 5);
 
 //Preprocessing only the cell.
 void preprocessing_cell(cv::Mat& img, cv::Mat& outerBox, cv::Mat& kernel);
