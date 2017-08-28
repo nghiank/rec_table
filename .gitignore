@@ -5,3 +5,10 @@ cmake_install.cmake
 ../extract_cell
 ../segment
 extract_cell
+.DS_Store
+end_to_end/.DS_Store
+segmentation/segment
+train/emnist.pyc
+train/.ipynb_checkpoints/
+train/*.pyc
+experiment/
