@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, shutil
 from subprocess import Popen, PIPE
 from PIL import Image, ImageFilter
 import tensorflow as tf
@@ -281,6 +281,9 @@ if not verify_input():
     print("Invalid input!!!")
     sys.exit()
     
+if os.path.isdir(extract_cell_folder):
+    shutil.rmtree(extract_cell_folder)
+os.makedirs(extract_cell_folder)
 extract_cell()
 process_table()
 print "========Final value====="
