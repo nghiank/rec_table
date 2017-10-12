@@ -12,3 +12,5 @@ train/emnist.pyc
 train/.ipynb_checkpoints/
 train/*.pyc
 experiment/
+**/__pycache__/
+**/db.sqlite3
