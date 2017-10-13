@@ -16,6 +16,8 @@ def index(request):
     if request.method == 'POST' and request.FILES['myfile']:
         f = request.FILES['myfile']
         name, extension = os.path.splitext(f.name)
+        if extension not in ['.png', '.jpg', 'jpeg']:
+            return render(request, 'index.html', {'error':'Invalid image file'})
         file_id = str(uuid.uuid4()) + extension 
         user_name = request.user.get_username()
         file_name = user_name + '/' + file_id 
