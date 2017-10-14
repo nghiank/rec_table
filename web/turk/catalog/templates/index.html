@@ -5,9 +5,12 @@
     <h1 class="display-3">Uploader</h1>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <div class="form-group">
+        <div class="form-group has-danger">
             <label for="myfile">Image file</label>
-            <input type="file" name="myfile" id="myfile" class="form-control-file">
+            <input type="file" name="myfile" id="myfile" class="form-control-file form-control-danger">
+            {% if error %}
+            <div class="form-control-feedback text-danger">{{error}}</div>
+            {% endif %}
             <small id="fileHelp" class="form-text text-muted">Only allow images file: .png .jpg .jpeg</small>
         </div>
         <div class="form-group row">
@@ -18,7 +21,4 @@
     </form>
     </div>
 </div>
-{% if error %}
-<p>{{error}}</p>
-{% endif %}
 {% endblock %}
