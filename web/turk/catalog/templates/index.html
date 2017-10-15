@@ -2,7 +2,7 @@
 {% block content %}
 <div class="jumbotron">
     <div class="container">
-    <h1 class="display-3">Uploader</h1>
+    <h1 class="display-5">Uploader</h1>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="form-group has-danger">
@@ -10,6 +10,9 @@
             <input type="file" name="myfile" id="myfile" class="form-control-file form-control-danger">
             {% if error %}
             <div class="form-control-feedback text-danger">{{error}}</div>
+            {% endif %}
+            {% if msg %}
+            <div class="form-control-feedback text-success">{{msg}}</div>
             {% endif %}
             <small id="fileHelp" class="form-text text-muted">Only allow images file: .png .jpg .jpeg</small>
         </div>
@@ -19,6 +22,19 @@
             </div>
         </div>
     </form>
+    <h1 class="display-5">Images uploaded to S3</h1>
+    <ul class="list-group">  
+    {% for item in items %}
+        <li class="list-group-item">
+            <a href={{item.url}}>{{ item.file_id }}</a>    
+            {% ifequal item.state 'FR' %}
+            <span class="badge badge-secondary">{{ item.get_state_display }}</span>
+            {% endifequal %}
+            <span style="float:right">{{ item.created_at|date:"M d, Y"}}</span>
+
+        </li>
+    {% endfor %}
+    </ul>
     </div>
 </div>
 {% endblock %}

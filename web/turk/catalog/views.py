@@ -13,6 +13,7 @@ def index(request):
     """
     View function for home page of site.
     """
+    imgs = ImageSheet.objects.filter(username__exact=request.user.get_username())
     if request.method == 'POST' and request.FILES['myfile']:
         f = request.FILES['myfile']
         name, extension = os.path.splitext(f.name)
@@ -28,10 +29,19 @@ def index(request):
         image_sheet = ImageSheet.objects.create(
             username=user_name,
             file_id=file_id,
+            url=default_storage.url(file_name),
             state=ImageSheet.FRESH)
+        # Render the HTML template index.html with the data in the context variable
+        return render(
+            request,
+            'index.html',
+            {'msg': 'You succesfully uploaded the image:' + file_id,
+             'items':imgs},
+        )
 
     # Render the HTML template index.html with the data in the context variable
     return render(
         request,
-        'index.html',
+        'index.html', 
+        {'items': imgs},
     )

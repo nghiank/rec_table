@@ -1,3 +1,7 @@
 body {
   padding-top: 3.5rem;
 }
+
+.auth {
+  margin: 32px;
+}
