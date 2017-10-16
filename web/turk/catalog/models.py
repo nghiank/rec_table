@@ -17,7 +17,7 @@ class ImageSheet(models.Model):
     )
     username = models.CharField(max_length=50, help_text="Username", default='unknown')
     file_id = models.CharField(max_length=120, help_text="File Id")
-    url = models.CharField(max_length=500, help_text="File URL")
+    url = models.CharField(max_length=255, help_text="File URL")
     state = models.CharField(max_length=10, choices=STATES, default=FRESH)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
