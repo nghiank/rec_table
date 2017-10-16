@@ -23,4 +23,3 @@ tabulate==0.7.5
 termcolor==1.1.0
 wcwidth==0.1.7
 websocket-client==0.44.0
-MySQL-python==1.2.3
