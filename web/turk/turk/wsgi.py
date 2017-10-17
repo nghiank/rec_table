@@ -13,6 +13,6 @@ import sys
 from django.core.wsgi import get_wsgi_application
 
 sys.path.insert(0, '/opt/python/current/app/web/turk')
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "turk.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "turk.settings_prod")
 
 application = get_wsgi_application()
