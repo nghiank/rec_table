@@ -24,6 +24,7 @@ SECRET_KEY = '*vll-t(-ao8njti8^$886^9*!oo2al-25v_4pj1o!rxksp)cg^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+DEBUG_LOG_DIR = '/var/log/app_logs/django_debug.log'
 
 ALLOWED_HOSTS = []
 
