@@ -73,7 +73,7 @@ WSGI_APPLICATION = 'turk.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+# brew install postgresm/en/1.11/ref/settings/#databases
 
 if 'RDS_DB_NAME' in os.environ:
     DATABASES = {
@@ -89,11 +89,14 @@ if 'RDS_DB_NAME' in os.environ:
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'nghia',
+            'USER': 'turk_user',
+            'PASSWORD': 'dev-test-123',
+            'HOST': 'localhost',
+            'PORT': '5432',
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
