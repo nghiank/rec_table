@@ -152,3 +152,7 @@ AWS_S3_OBJECT_PARAMETERS = {
 }
 AWS_S3_FILE_OVERWRITE = False
 AWS_S3_REGION_NAME = 'ap-southeast-1'
+
+ALLOWED_HOSTS = [
+    rec-table-dev.ap-southeast-1.elasticbeanstalk.com,
+]
