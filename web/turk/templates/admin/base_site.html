@@ -1,9 +1,9 @@
-{% extends "admin/base.html" %}
+{% extends "admin/base_site.html" %}
 
-{% block title %}{{ title }} | {{ site_title|default:_('Image training site admin') }}{% endblock %}
+{% block title %}{{ title }} | {{ site_title|default:_('Image Training') }}{% endblock %}
 
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Image training admin') }}</a></h1>
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Image Training Admin</a></h1>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
