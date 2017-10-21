@@ -5,8 +5,8 @@ import tensorflow as tf
 import numpy as np
 
 num_row = 60
-row = [dict() for x in xrange(num_row+1)]
-exp_row = [dict() for x in xrange(num_row+1)]
+row = [dict() for x in range(num_row+1)]
+exp_row = [dict() for x in range(num_row+1)]
 
 attr = ['id', 'num', 'big', 'small', 'roll', 'del', 
         'id', 'num', 'big', 'small', 'roll', 'del']
@@ -45,7 +45,7 @@ letter_map = {
 }
 
 input_filename = "../train/data/test/g.png"
-extract_cell_folder = "/Users/nghiaround/Desktop/tmp"
+extract_cell_folder = "/Users/nghia/Desktop/tmp"
 trained_data_folder = "../train/checkpoint"
 fileNamePrefix = 'file'
 
@@ -160,7 +160,7 @@ def predictCells(types):
     att   = [0] * len(types) * 2   # Store the attribute
     cnt = 0
     cur_ind = num_col  # Starting from second row 
-    for i in xrange(len(attr)):
+    for i in range(len(attr)):
         if attr[i] in types:
             s_ind[cnt] = cur_ind 
             sz[cnt] = max_length[attr[i]]
@@ -174,38 +174,38 @@ def predictCells(types):
 
     # Get all cell indices
     inds = []
-    for i in xrange(num_combine_row):
+    for i in range(num_combine_row):
         #Scan each row
-        for j in xrange(len(s_ind)):
-            for k in xrange(sz[j]):
+        for j in range(len(s_ind)):
+            for k in range(sz[j]):
                 ind = s_ind[j] + k + i * num_col
                 inds.append(ind)
 
     # Predict each cell indices
     filenames = [None] * len(inds)
-    for i in xrange(len(inds)):
+    for i in range(len(inds)):
         filenames[i] = getFileName(inds[i])
 
     if types[0] == 'del': # Special for this column
         res_predict = [''] * len(inds)
-        for i in xrange(len(filenames)):
+        for i in range(len(filenames)):
             if os.path.isfile(filenames[i]):
                 res_predict[i] = 'X'
     else:
         res_predict = predict(filenames, train_file_name, the_map)
     # Debugging purpose
     '''
-    for i in xrange(len(res_predict)):
+    for i in range(len(res_predict)):
         if res_predict[i]:
             print("%d: %s" % (inds[i], res_predict[i]))
     '''
     # Build the value indicated in types
     cnt = 0
-    for i in xrange(num_combine_row):
+    for i in range(num_combine_row):
         #Scan each row
-        for j in xrange(len(s_ind)):
+        for j in range(len(s_ind)):
             val = ""
-            for k in xrange(sz[j]):
+            for k in range(sz[j]):
                 if res_predict[cnt]:
                     val = val + res_predict[cnt]
                 cnt = cnt + 1
@@ -213,12 +213,12 @@ def predictCells(types):
             if j >= len(types):
                 row_ind = row_ind + num_combine_row
             col_name = att[j]
-            print "row_ind = %d, attr=%s, val=%s" % (row_ind, col_name, val)
+            print("row_ind = %d, attr=%s, val=%s" % (row_ind, col_name, val))
             row[row_ind][col_name] = val.upper() 
             #print row[row_ind]
 
 def verify_result(exp_filename):
-    print "Try to verify result..."
+    print("Try to verify result...")
     with open(exp_filename, 'r') as myfile:
         datas = myfile.readlines()
     
@@ -227,7 +227,7 @@ def verify_result(exp_filename):
         if len(data) == 0: 
             break
         r = data.split(',')
-        print r
+        print(r)
         try:
             rid = int(r[0])
             exp_row[rid]['num'] = r[1]
@@ -236,16 +236,16 @@ def verify_result(exp_filename):
             exp_row[rid]['roll'] = r[4]
             exp_row[rid]['del'] = r[5]
         except:
-            print "Exception throw at line : "  + data 
-            print "Unexpected error:", sys.exc_info()[0]
+            print("Exception throw at line : "  + data)
+            print("Unexpected error:" + sys.exc_info()[0])
     
     error_cell_count = 0
     error_row_cnt = 0
-    for i in xrange(1, num_row+1):
+    for i in range(1, num_row+1):
         s = ""
         found_diff = False
         error_cell_count = error_cell_count + 1
-        for j in xrange(1, len(attr) / 2):
+        for j in range(1, len(attr) / 2):
             try:
                 e = exp_row[i][attr[j]]
                 a = row[i][attr[j]]
@@ -253,7 +253,7 @@ def verify_result(exp_filename):
                     found_diff = True
                     s = s + "-->diff(%s): %s ==> %s\n" % (attr[j], e, a)
             except:
-                print "Exception throw at line : "  + str(i) 
+                print("Exception throw at line : "  + str(i))
 
         if found_diff: 
             error_row_cnt = error_row_cnt + 1
@@ -262,13 +262,13 @@ def verify_result(exp_filename):
                 rr = (i-30) * 26 + 13
             print("Diff found in row %i(in cellid %d)" % (i, rr))
             print(s)
-    print "Percent row count error: %0.2f" % ((float(error_row_cnt) / float(num_row)) * 100)
-    print "Percent cell count error: %0.2f" % ((float(error_row_cnt) / float(num_row * 5)) * 100)
+    print("Percent row count error: %0.2f" % ((float(error_row_cnt) / float(num_row)) * 100))
+    print("Percent cell count error: %0.2f" % ((float(error_row_cnt) / float(num_row * 5)) * 100))
 
 def process_table():
     day = get_day()
     print("Day=" + str(day[0]))
-    for i in xrange(1, num_row + 1):
+    for i in range(1, num_row + 1):
         row[i]['del'] = ''
     predictCells(['num'])
     predictCells(['big', 'small'])
@@ -286,17 +286,14 @@ if os.path.isdir(extract_cell_folder):
 os.makedirs(extract_cell_folder)
 extract_cell()
 process_table()
-print "========Final value====="
-for i in xrange(1, num_row + 1):
-    print "====Row %d====" % i
-    print "Num: " + row[i]['num']
-    print "B:   " + row[i]['big']
-    print "S:   " + row[i]['small']
-    print "R:   " + row[i]['roll']
+print("========Final value=====")
+for i in range(1, num_row + 1):
+    print("====Row %d====" % i)
+    print("Num: " + row[i]['num'])
+    print("B:   " + row[i]['big'])
+    print("S:   " + row[i]['small'])
+    print("R:   " + row[i]['roll'])
 
 expected_filename = input_filename + ".exp"
 if os.path.isfile(expected_filename):
     verify_result(expected_filename)
-    
-
-

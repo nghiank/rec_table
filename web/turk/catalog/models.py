@@ -26,3 +26,14 @@ class ImageSheet(models.Model):
         String for representing the Model object (in Admin site etc.)
         """
         return self.file_id
+
+class Cell(models.Model):
+    """
+    Model representing the cell we extracted from ImageSheet
+    """
+    url = models.CharField(max_length=254, help_text="File URL")
+    expected_char = models.CharField(max_length=1, help_text="Expected character")
+    predicted_char = models.CharField(max_length=1, help_text="Predicted_character")
+    image_sheet = models.ForeignKey(ImageSheet, on_delete=models.CASCADE)
+    def __str__(self):
+        return self.url
