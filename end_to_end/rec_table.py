@@ -44,7 +44,7 @@ letter_map = {
     'del': 'X',
 }
 
-input_filename = "../train/data/test/g.png"
+input_filename = "/Users/nghia/Downloads/a.jpg"
 extract_cell_folder = "/Users/nghia/Desktop/tmp"
 trained_data_folder = "../train/checkpoint"
 fileNamePrefix = 'file'
@@ -170,7 +170,7 @@ def predictCells(types):
         else:
             cur_ind += col_sz[i] 
 
-    num_combine_row = num_row / 2
+    num_combine_row = num_row // 2
 
     # Get all cell indices
     inds = []
@@ -245,7 +245,7 @@ def verify_result(exp_filename):
         s = ""
         found_diff = False
         error_cell_count = error_cell_count + 1
-        for j in range(1, len(attr) / 2):
+        for j in range(1, len(attr) // 2):
             try:
                 e = exp_row[i][attr[j]]
                 a = row[i][attr[j]]

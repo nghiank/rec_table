@@ -11,6 +11,7 @@
 #include "preprocessing.hpp"
 #include "line_util.hpp"
 #include "debug_util.hpp"
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <opencv2/opencv.hpp>
@@ -26,7 +27,7 @@ const int HOUGH_LINE_THRESHOLD = 500;
 
 /* Debug purpose */
 #define ENABLE_REMOVE_BORDER 1
-#define DEBUG 0
+#define DEBUG 1
 
 
 std::string INPUT_FILE_NAME_OPTION = "--inputFileName";
@@ -96,6 +97,7 @@ void getCellBorder(const Mat& outerBox, double percent_threshold, Point& cp1, Po
 
     cp2.x = xRight - sz;
     cp2.y = yDown - sz;
+    //cout << "cp1=" << cp1 << ", cp2=" << cp2 << endl;
 }
 
 double findDstCorners(Point2f src[4], Point2f dst[4]) {
@@ -105,7 +107,7 @@ double findDstCorners(Point2f src[4], Point2f dst[4]) {
         double len = sqrt(
             (src[i].x - src[j].x) * (src[i].x - src[j].x) + 
             (src[i].y - src[j].y) * (src[i].y - src[j].y) );
-        max_len = max(len, max_len);
+        max_len = int(max(len, max_len));
     }
     dst[0] = Point2f(0, 0);
     dst[1] = Point2f(max_len, 0);
@@ -223,10 +225,10 @@ void findCells(
 
     imwrite(outputFolder + "/undistorted.jpg", undistorted);
     imwrite(outputFolder + "/undistorted_processed.jpg", outerBox);
-    vector<double> p = {1, 4, 3, 3, 1, 1, 1, 4, 3, 3, 1, 1};
+    vector<double> p = {1, 4, 3, 3, 1, 1,    1, 4, 3, 3, 1, 1};
     
     int sum = 0;
-    printf("Value of maxLengt = %lf\n", maxLength);
+    printf("Value of maxLength = %lf\n", maxLength);
     double gap = maxLength / numRow;
     for(int i = 0; i < p.size(); ++i) {
         sum += p[i];
@@ -252,6 +254,10 @@ void findCells(
                 //printf("%d %d\n", p0.x, row[p0.x]);
                 p0.x++;
             }
+            //If this move too far - probably the border in front missing - we need to move back to 0 position
+            if (p0.x >= gap / 2) {
+                p0.x = 0;
+            }
             int last_col = outerBox.size().width - 1;
             double newLength = maxLength - p0.x;
             while(row[last_col] == 0) {
@@ -266,6 +272,7 @@ void findCells(
         p1.y = p0.y + gap;
         //We only run first cell for first row 
         int n = (i == 0) ? 1 : sum;
+        cout << "New Line-----> p0=" << p0 << endl;
         for(int j = 0; j < n; ++j) {
             char st[100];
             std::string fileName = outputFolder + "/file%lu.png";
@@ -283,9 +290,18 @@ void findCells(
             if (j == n - 1) {
                 p2.x = p1.x;
             }
+            p2.x = std::min(p2.x, int(maxLength) - 1);
+            p2.y = std::min(p2.y, int(maxLength) - 1);
             cv::Rect rect(p0, p2);
-            Mat raw_box = undistorted(rect);
-            Mat miniMat = outerBox(rect);
+            Mat raw_box, miniMat;
+            try{
+                raw_box = undistorted(rect);
+                miniMat = outerBox(rect);
+                //cout << "Debug rect=" << rect << ", id="<< i * sum + j << endl;
+            } catch(cv::Exception) {
+                cout << "Exception when getting raw_box and miniMax: rec=" << rect << endl;
+                cout << "p0=" << p0 << ", p1=" << p1 << endl;
+            }
             #if DEBUG 
             imwrite(string(st) + "_beforeRemoving.png", miniMat);
             #endif
@@ -295,7 +311,12 @@ void findCells(
             getCellBorder(miniMat, 0.8, cp1, cp2);
 
             cv::Rect inside(cp1, cp2);
-            Mat box_cell = raw_box(inside);
+            Mat box_cell;
+            try{
+                box_cell = raw_box(inside);
+            } catch(cv::Exception) {
+                cout << "Exception when getting box_cell: rec=" << inside << endl;
+            }
             Mat final_box_cell;
             preprocessing_cell(box_cell, final_box_cell, kernel);
             #if DEBUG

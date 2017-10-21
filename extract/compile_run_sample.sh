@@ -1,1 +1,1 @@
-make && ./extract_cell --inputFileName /Users/nghia/Desktop/d.png --outputFolder /Users/nghia/Desktop/tmp
+make && ./extract_cell --inputFileName /Users/nghia/Desktop/a.jpg --outputFolder /Users/nghia/Desktop/tmp
