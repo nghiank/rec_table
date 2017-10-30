@@ -391,6 +391,167 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
     return itr != end && (++itr) != end;
 }
 
+std::string getFileName(int i, int j, int sum, const string& outputFolder) {
+    char st[100];
+    std::string fileName = outputFolder + "/file%lu.png";
+    sprintf(st, fileName.c_str(), i * sum + j);
+    return string(st);
+}
+
+void updateCorner(Point& p0, Point& p1, int y, int x) {
+    p0.x = min(p0.x, x);
+    p0.y = min(p0.y, y);
+    p1.x = max(p1.x, x);
+    p1.y = max(p1.y, y);
+}
+
+int bfs(int y, int x, const Mat& img, vector<vector<int> >& visit, int currentCnt, Point& p0, Point& p1) {
+    visit[y][x] = currentCnt;
+    queue<pair<int, int>> q;
+    q.push(make_pair(y,x));
+    p0.x = INT_MAX;
+    p0.y = INT_MAX;
+    p1.x = -1;
+    p1.y = -1;
+    updateCorner(p0, p1, y, x);
+    int total = 1;
+    int dx[] = {0, 1, 0, -1};
+    int dy[] = {-1, 0, 1, 0};
+    int m = img.rows;
+    int n = img.cols;
+    bool valid = true;
+    while(!q.empty()) {
+        pair<int, int> p = q.front(); q.pop();
+        for(int i = 0; i < 4; ++i) {
+            int y1 = p.first + dy[i];
+            int x1 = p.second + dx[i];
+            if (y1<0 || x1<0 || y1>=m || x1>=n) continue;
+            if (visit[y1][x1]!=0) continue;
+            if (img.ptr(y1)[x1] != 0 ) continue;
+            if (y1 == 0 || x1 == 0 || y1 == img.rows -1 || x1 == img.cols -1) {
+                valid = false;
+            }
+            visit[y1][x1] = currentCnt;
+            q.push(make_pair(y1, x1));
+            updateCorner(p0, p1, y1, x1);
+            ++total;
+        }
+    }
+    p0.x = p0.x + 1;
+    p0.y = p0.y + 1;
+    p1.x = p1.x - 1;
+    p1.y = p1.y - 1;
+    return valid ? total: 0;
+}
+
+void extractDigit(
+    const Point& p0, const Point& p1, 
+    const Mat& fullImage, vector<vector<int> >& visit, int& currentCnt, 
+    Mat& digit) {
+    int midx = (int)((p0.x + p1.x) / 2);
+    int midy = (int)((p0.y + p1.y) / 2);
+    double percent = 0.6;
+    int minEdge = min(p1.x - p0.x, p1.y - p0.y) *  percent;
+    minEdge = minEdge * minEdge;
+    int mmax = 0;
+    Rect rect;
+    int sx,sy;  
+    //cout << "Looking inside p0="<<p0 << ", p1=" << p1 << endl;
+    for(int y = (int)p0.y; y<=(int)p1.y; ++y) {
+        const uchar *row = fullImage.ptr(y);
+        for(int x = (int)p0.x; x <= (int)p1.x; ++x) {
+            //cout <<"visit:" << visit[y][x] << " " << int(row[x]) << endl;
+            if (visit[y][x] != 0 || row[x]!=0) continue;
+            int dst = (y - midy) * (y - midy) + (x-midx) * (x-midx);
+            if (dst > minEdge) continue;
+            ++currentCnt;
+            Point p2, p3;
+            printf("BFS From here %d %d\n",y,x);
+            int total = bfs(y, x, fullImage, visit, currentCnt, p2, p3);
+            cout <<"Total = " << total << endl;
+            if (total > mmax) {
+                rect = Rect(p2, p3);
+                mmax = total;
+                sx = x;
+                sy = y;
+            }
+        }
+    }
+    cout << "Rec found:" << rect << endl;
+    digit = fullImage(rect);
+}
+
+void findCellsUsingBfs(
+    Mat& img, Mat& outerBox, 
+    int numRow, 
+    const std::string& inputFileName, 
+    const std::string& outputFolder) 
+ {
+    /* Get the table from original image */
+    Mat kernel = (Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
+    Point2f src[4], dst[4];
+    findFourCorners(outerBox, src);
+    double maxLength = findDstCorners(src, dst);
+
+    Mat original_img = imread(inputFileName, 0);
+    Mat undistorted ;
+    cv::warpPerspective(original_img, undistorted, cv::getPerspectiveTransform(src, dst), Size(maxLength, maxLength));
+    printf("Value of maxLength = %lf\n", maxLength);
+    int numCol = 0;
+    vector<int> p = {
+        1, 4, 3, 3, 1, 1,    
+        1, 4, 3, 3, 1, 1};
+    for(int i = 0; i < p.size(); ++i) {
+        numCol += p[i];
+    }
+    double gapX = maxLength / numCol;
+    double gapY = maxLength / numRow;
+    Mat fullImageProcessed;
+    thresholdify(undistorted, fullImageProcessed);
+    bitwise_not(fullImageProcessed, fullImageProcessed);
+    imwrite(outputFolder + "/1.FullImageProcessed.png", fullImageProcessed);
+    vector<vector<int> > visit(fullImageProcessed.rows);
+    for(int i = 0; i < fullImageProcessed.rows; ++i) {
+        visit[i].resize(fullImageProcessed.cols, 0);
+    }
+    int currentCnt = 0;
+    for(int i = 0; i < numRow; ++i) {
+        for(int j = 0; j < numCol; ++j) {
+            Point p0, p1;
+            p0.x = j * gapX;
+            p0.y = i * gapY;
+            p1.x = p0.x + gapX;
+            p1.y = p0.y + gapY;
+            p1.x = std::min(int(maxLength), p1.x);
+            p1.y = std::min(int(maxLength), p1.y);
+            cv::Rect rect(p0, p1); 
+            Mat rawBox, rawBoxThresholdify;
+            string fileName = getFileName(i, j, numCol, outputFolder);
+            try{
+                rawBox = undistorted(rect);
+                imwrite(fileName, rawBox);
+
+                //Adaptive thresholdify the image.
+                thresholdify(rawBox, rawBoxThresholdify);
+                bitwise_not(rawBoxThresholdify, rawBoxThresholdify);
+                imwrite(fileName+"1-Theshold.png", rawBoxThresholdify);
+
+                /// Apply the specified morphology operation
+                Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(3,3), Point(0,0));
+                Mat afterCleanImg;
+                morphologyEx(rawBoxThresholdify, afterCleanImg, MORPH_CLOSE, kernel);
+                imwrite(fileName + "2-AfterMorph.png", afterCleanImg);
+            } catch(cv::Exception) {
+                cout << "Exception when getting raw_box rec=" << rect << endl;
+            }
+
+            Mat digit;
+            extractDigit(p0, p1, fullImageProcessed, visit, currentCnt, digit);
+            imwrite(fileName + "3-ExtractTheDigit.png", digit);
+        }
+    }
+ }
+
 int main(int argc, char** argv)
 {
     if (!cmdOptionExists(argv, argv + argc, INPUT_FILE_NAME_OPTION)) {
@@ -411,14 +572,15 @@ int main(int argc, char** argv)
     Mat kernel = (Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
     Mat outerBox = Mat(img.size(), CV_8UC1);
 
-    printf("Preprocessing img");
+    printf("Preprocessing img\n");
+
     preprocessing(img,outerBox, kernel);
-    imwrite(outputFolder + "/preprocessing.jpg", outerBox);
+    imwrite(outputFolder + "/1.preprocessing_original_image.jpg", outerBox);
 
     printf("Find table blob");
     findTableBlob(outerBox, kernel);
-    imwrite(outputFolder + "/findBlob.jpg", outerBox);
+    imwrite(outputFolder + "/2.findLargestBlob.jpg", outerBox);
 
     int numRows = 31;
-    findCells(img, outerBox, numRows, fileName, outputFolder);
+    findCellsUsingBfs(img, outerBox, numRows, fileName, outputFolder);
 }

@@ -11,6 +11,6 @@
 
 #include <opencv2/opencv.hpp>
 
-#define GRAY_THRESHOLD 100
+#define GRAY_THRESHOLD 90
 
 #endif /* constants_hpp */

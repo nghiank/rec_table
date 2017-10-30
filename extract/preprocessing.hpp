@@ -12,6 +12,7 @@
 #include <opencv2/opencv.hpp>
 #include "constants.hpp"
 
+void thresholdify(cv::Mat& img, cv::Mat& out);
 //Preprocessing the whole image before processing.
 void preprocessing(
     cv::Mat& img, cv::Mat& outerBox, cv::Mat& kernel,

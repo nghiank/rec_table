@@ -6,6 +6,10 @@ using namespace std;
 
 const int INTERMEDIATE_GRAY = 64;
 
+void thresholdify(Mat& img, Mat& out) {
+    adaptiveThreshold(img, out, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 11, 3);
+}
+
 void preprocessing(
     Mat& img, Mat& outerBox, 
     Mat& kernel, 
