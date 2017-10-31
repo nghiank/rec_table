@@ -3,6 +3,7 @@
 <div class="jumbotron">
     <div class="container">
     <h1 class="display-5">Verify</h1>
+    <a href={{item.url}}>{{ item.file_id }}</a>    
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="row">
@@ -22,7 +23,7 @@
         {% for i in n %}
         <div class="row">
             <input class="order" value='{{i}}'/>
-            <input class="num"/>
+            <input class="num" placeholder="{{i}}"/>
             <input class="big"/>
             <input class="small"/>
             <input class="roll"/>

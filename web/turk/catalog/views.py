@@ -54,14 +54,16 @@ def add30(value, arg):
     return value + arg 
 
 @login_required
-def verify(request):
+def verify(request, id):
     """
     Allow user to enter expected value
     """
     # Render the HTML template index.html with the data in the context variable
+    item = ImageSheet.objects.get(pk=id)
     return render(
         request,
         'verify.html', {
              'n' : range(1, 31), 
+             'item': item,
         },
     )

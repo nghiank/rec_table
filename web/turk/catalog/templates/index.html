@@ -30,8 +30,8 @@
             {% ifequal item.state 'FR' %}
             <span class="badge badge-secondary">{{ item.get_state_display }}</span>
             {% endifequal %}
+            <a href="{% url 'verify' item.id %}">Verify</button>
             <span style="float:right">{{ item.created_at|date:"M d, Y"}}</span>
-
         </li>
     {% endfor %}
     </ul>
