@@ -1,0 +1,41 @@
+{% extends "base_generic.html" %}
+{% block content %}
+<div class="jumbotron">
+    <div class="container">
+    <h1 class="display-5">Verify</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+            <div class="order"></div>
+            <div class="num">Num</div>
+            <div class="big">Big</div>
+            <div class="small">Small</div>
+            <div class="roll">R</div>
+            <div class="x">X</div>
+            <div class="order"></div>
+            <div class="num">Num</div>
+            <div class="big">Big</div>
+            <div class="small">Small</div>
+            <div class="roll">R</div>
+            <div class="x">X</div>
+        </div>
+        {% for i in n %}
+        <div class="row">
+            <input class="order" value='{{i}}'/>
+            <input class="num"/>
+            <input class="big"/>
+            <input class="small"/>
+            <input class="roll"/>
+            <input class="x"/>
+            <input class="order" value='{{i | add:"30" }}'/>
+            <input class="num"/>
+            <input class="big"/>
+            <input class="small"/>
+            <input class="roll"/>
+            <input class="x"/>
+        </div>
+        {% endfor %}
+    </form>
+    </div>
+</div>
+{% endblock %}

@@ -6,6 +6,7 @@ from django.core.files.storage import FileSystemStorage
 from django.core.files.storage import default_storage
 from django.shortcuts import render
 from .models import ImageSheet
+from django import template
 
 
 @login_required
@@ -44,4 +45,23 @@ def index(request):
         request,
         'index.html', 
         {'items': imgs},
+    )
+
+register = template.Library()
+
+@register.filter
+def add30(value, arg):
+    return value + arg 
+
+@login_required
+def verify(request):
+    """
+    Allow user to enter expected value
+    """
+    # Render the HTML template index.html with the data in the context variable
+    return render(
+        request,
+        'verify.html', {
+             'n' : range(1, 31), 
+        },
     )

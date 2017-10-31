@@ -1,7 +1,67 @@
+:root {
+  --cell-width: 30px;
+  --cell-height: 30px;
+
+  --cell-width-3x: 90px;
+  --cell-width-4x: 120px;
+}
+
 body {
-  padding-top: 3.5rem;
+  padding-top: 0.3rem;
 }
 
 .auth {
   margin: 32px;
+}
+
+.order{
+  border-style: solid;
+  border-width: 1px;
+  width: var(--cell-width);
+  height: var(--cell-height); 
+  border-right-style: none;
+}
+
+.num {
+  border-style: solid;
+  border-width: 1px;
+  width: var(--cell-width-4x);
+  height: var(--cell-height); 
+  border-right-style: none;
+  text-align: center;
+}
+
+.big {
+  border-style: solid;
+  border-width: 1px;
+  width: var(--cell-width-3x);
+  height: var(--cell-height); 
+  border-right-style: none;
+  text-align: center;
+}
+
+.small {
+  border-style: solid;
+  border-width: 1px;
+  width: var(--cell-width-3x);
+  height: var(--cell-height); 
+  border-right-style: none;
+  text-align: center;
+}
+
+.roll {
+  border-style: solid;
+  border-width: 1px;
+  width: var(--cell-width);
+  height: var(--cell-height); 
+  border-right-style: none;
+  text-align: center;
+}
+
+.x {
+  border-style: solid;
+  border-width: 1px;
+  width: var(--cell-width);
+  height: var(--cell-height); 
+  text-align: center;
 }
