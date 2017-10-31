@@ -444,13 +444,13 @@ int bfs(int y, int x, const Mat& img, vector<vector<int> >& visit, int currentCn
     return valid ? total: 0;
 }
 
-void extractDigit(
+void extractDigitSection(
     const Point& p0, const Point& p1, 
     const Mat& fullImage, vector<vector<int> >& visit, int& currentCnt, 
     Mat& digit) {
     int midx = (int)((p0.x + p1.x) / 2);
     int midy = (int)((p0.y + p1.y) / 2);
-    double percent = 0.6;
+    double percent = 0.35;
     int minEdge = min(p1.x - p0.x, p1.y - p0.y) *  percent;
     minEdge = minEdge * minEdge;
     int mmax = 0;
@@ -466,9 +466,9 @@ void extractDigit(
             if (dst > minEdge) continue;
             ++currentCnt;
             Point p2, p3;
-            printf("BFS From here %d %d\n",y,x);
+            //printf("BFS From here %d %d\n",y,x);
             int total = bfs(y, x, fullImage, visit, currentCnt, p2, p3);
-            cout <<"Total = " << total << endl;
+            //cout <<"Total = " << total << endl;
             if (total > mmax) {
                 rect = Rect(p2, p3);
                 mmax = total;
@@ -477,8 +477,62 @@ void extractDigit(
             }
         }
     }
-    cout << "Rec found:" << rect << endl;
+    //cout << "Rec found:" << rect << endl;
     digit = fullImage(rect);
+}
+
+int findConnectedComponent(int y, int x, Mat& img, vector<vector<int> >& visit, int component) {
+    int dx[] = {0, 1, 0, -1};
+    int dy[] = {-1, 0, 1, 0};
+    int m = img.rows;
+    int n = img.cols;
+
+    visit[y][x] = component;
+    queue<pair<int, int> > q;
+    q.push(make_pair(y, x));
+    int numItems = 1;
+    while (!q.empty()) {
+        auto v = q.front(); q.pop();
+        for(int i = 0; i < 4; ++i) {
+            int y1 = v.first + dy[i];
+            int x1 = v.second + dx[i];
+            if (y1<0 || x1<0 || y1>=m || x1>=n) continue;
+            if (visit[y1][x1]!=0) continue;
+            if (img.ptr(y1)[x1] != 255 ) continue;
+            ++numItems;
+            visit[y1][x1] = component;
+            q.push(make_pair(y1, x1));
+        }
+    }
+    return numItems;
+}
+int extractDigit(Mat& digit) {
+    vector<vector<int> > visit(digit.rows);
+    for(int i = 0; i < digit.rows; ++i) {
+        visit[i].resize(digit.cols, 0);
+    }
+    int component = 0;
+    int mmax = 0;
+    int t = 0;
+    for(int y = 0; y < digit.rows; ++y) {
+        for(int x = 0; x < digit.cols; ++x) {
+            if (digit.ptr(y)[x] != 255 || visit[y][x] != 0) continue;
+            int cnt = findConnectedComponent(y, x, digit, visit, ++component);
+            if (cnt > mmax) {
+                mmax = cnt;
+                t = component;
+            }
+        }
+    }
+    if (mmax == 0) return 0;
+    for(int y = 0; y < digit.rows; ++y) {
+        for(int x = 0; x < digit.cols; ++x) {
+            if (visit[y][x] != t) {
+                digit.at<char>(y,x) = 0;
+            }
+        }
+    }
+    return mmax;
 }
 
 void findCellsUsingBfs(
@@ -509,14 +563,16 @@ void findCellsUsingBfs(
     Mat fullImageProcessed;
     thresholdify(undistorted, fullImageProcessed);
     bitwise_not(fullImageProcessed, fullImageProcessed);
-    imwrite(outputFolder + "/1.FullImageProcessed.png", fullImageProcessed);
+    #if DEBUG
+        imwrite(outputFolder + "/1.FullImageProcessed.png", fullImageProcessed);
+    #endif
     vector<vector<int> > visit(fullImageProcessed.rows);
     for(int i = 0; i < fullImageProcessed.rows; ++i) {
         visit[i].resize(fullImageProcessed.cols, 0);
     }
     int currentCnt = 0;
     for(int i = 0; i < numRow; ++i) {
-        for(int j = 0; j < numCol; ++j) {
+        for(int j = 0; j < (i==0?1:numCol); ++j) {
             Point p0, p1;
             p0.x = j * gapX;
             p0.y = i * gapY;
@@ -527,9 +583,10 @@ void findCellsUsingBfs(
             cv::Rect rect(p0, p1); 
             Mat rawBox, rawBoxThresholdify;
             string fileName = getFileName(i, j, numCol, outputFolder);
+            cout <<"==============" << fileName << endl;
             try{
                 rawBox = undistorted(rect);
-                imwrite(fileName, rawBox);
+                imwrite(fileName + "0-Rawbox.png", rawBox);
 
                 //Adaptive thresholdify the image.
                 thresholdify(rawBox, rawBoxThresholdify);
@@ -540,14 +597,22 @@ void findCellsUsingBfs(
                 Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(3,3), Point(0,0));
                 Mat afterCleanImg;
                 morphologyEx(rawBoxThresholdify, afterCleanImg, MORPH_CLOSE, kernel);
-                imwrite(fileName + "2-AfterMorph.png", afterCleanImg);
+                #if DEBUG
+                    imwrite(fileName + "2-AfterMorph.png", afterCleanImg);
+                #endif
             } catch(cv::Exception) {
                 cout << "Exception when getting raw_box rec=" << rect << endl;
             }
 
             Mat digit;
-            extractDigit(p0, p1, fullImageProcessed, visit, currentCnt, digit);
-            imwrite(fileName + "3-ExtractTheDigit.png", digit);
+            extractDigitSection(p0, p1, fullImageProcessed, visit, currentCnt, digit);
+            #if DEBUG
+                imwrite(fileName + "3-ExtractTheDigitWithNoise.png", digit);
+            #endif
+            int cnt = extractDigit(digit);
+            if (cnt > 20) {
+                imwrite(fileName, digit);
+            }
         }
     }
  }

@@ -45,6 +45,7 @@ letter_map = {
 }
 
 input_filename = "/Users/nghia/Downloads/a.jpg"
+#input_filename = "/Users/nghia/rec_table/train/data/test/g.png"
 extract_cell_folder = "/Users/nghia/Desktop/tmp"
 trained_data_folder = "../train/checkpoint"
 fileNamePrefix = 'file'
