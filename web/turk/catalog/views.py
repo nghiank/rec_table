@@ -1,12 +1,13 @@
 import os
 import uuid
 
+from .models import ImageSheet
+from django import template
 from django.contrib.auth.decorators import login_required
+from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 from django.core.files.storage import default_storage
 from django.shortcuts import render
-from .models import ImageSheet
-from django import template
 
 
 @login_required
@@ -60,6 +61,14 @@ def verify(request, id):
     """
     # Render the HTML template index.html with the data in the context variable
     item = ImageSheet.objects.get(pk=id)
+    user_name = request.user.get_username()
+    file_name = user_name + '/' + item.file_id 
+    s3_file = default_storage.open(file_name, 'r')
+    with open('/tmp/'+ file_name, 'wb') as f:
+        myfile = File(f)
+        myfile.write(s3_file.read())
+    myfile.closed
+    f.closed    
     return render(
         request,
         'verify.html', {

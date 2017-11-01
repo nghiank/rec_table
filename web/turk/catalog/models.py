@@ -35,5 +35,21 @@ class Cell(models.Model):
     expected_char = models.CharField(max_length=1, help_text="Expected character")
     predicted_char = models.CharField(max_length=1, help_text="Predicted_character")
     image_sheet = models.ForeignKey(ImageSheet, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
         return self.url
+
+class ExpectedResult(models.Model):
+    """
+    Model representing the full expected result of the ImageSheet
+    """
+    order = models.IntegerField()
+    num = models.CharField(max_length=4, help_text="Number field")
+    big = models.CharField(max_length=3, help_text="Big number field")
+    small = models.CharField(max_length=3, help_text="Small number field")
+    roll = models.CharField(max_length=1, help_text="Roll field R,K,I,r,k,i")
+    is_delete = models.CharField(max_length=1, help_text="is this line deleted")
+    image_sheet = models.ForeignKey(ImageSheet, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
