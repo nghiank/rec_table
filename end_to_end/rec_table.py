@@ -44,7 +44,11 @@ letter_map = {
     'del': 'X',
 }
 
-input_filename = "/Users/nghia/Downloads/a.jpg"
+if len(sys.argv) == 1:
+    input_filename = "/Users/nghia/Downloads/a.jpg"
+else:
+    input_filename = sys.argv[1]
+
 #input_filename = "/Users/nghia/rec_table/train/data/test/g.png"
 extract_cell_folder = "/Users/nghia/Desktop/tmp"
 trained_data_folder = "../train/checkpoint"

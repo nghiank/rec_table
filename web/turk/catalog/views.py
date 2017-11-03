@@ -1,5 +1,6 @@
 import os
 import uuid
+import subprocess
 
 from .models import ImageSheet
 from django import template
@@ -59,16 +60,26 @@ def verify(request, id):
     """
     Allow user to enter expected value
     """
-    # Render the HTML template index.html with the data in the context variable
+
+    # Download file to local folder
     item = ImageSheet.objects.get(pk=id)
     user_name = request.user.get_username()
     file_name = user_name + '/' + item.file_id 
     s3_file = default_storage.open(file_name, 'r')
+    local_file = os.path.join('/tmp/', file_name)
     with open('/tmp/'+ file_name, 'wb') as f:
         myfile = File(f)
         myfile.write(s3_file.read())
     myfile.closed
     f.closed    
+
+    # Run the prediction process for the file just downloaded
+    print("Local file name :" + local_file)
+    result = subprocess.check_output(["./run_prediction.sh", local_file], shell=True)
+    #print("Result=" + str(result))
+
+
+    # Render the HTML template index.html with the data in the context variable
     return render(
         request,
         'verify.html', {
