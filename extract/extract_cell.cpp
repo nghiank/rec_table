@@ -610,7 +610,7 @@ void findCellsUsingBfs(
                 imwrite(fileName + "3-ExtractTheDigitWithNoise.png", digit);
             #endif
             int cnt = extractDigit(digit);
-            if (cnt > 20) {
+            if (cnt > 40) {
                 imwrite(fileName, digit);
             }
         }
