@@ -44,14 +44,14 @@ letter_map = {
     'del': 'X',
 }
 
-if len(sys.argv) == 1:
-    input_filename = "/Users/nghia/Downloads/a.jpg"
-else:
-    input_filename = sys.argv[1]
-
 #input_filename = "/Users/nghia/rec_table/train/data/test/g.png"
+input_filename = "/Users/nghia/Downloads/a.jpg"
 extract_cell_folder = "/Users/nghia/Desktop/tmp"
 trained_data_folder = "../train/checkpoint"
+
+if len(sys.argv) == 3:
+    input_filename = sys.argv[1]
+    extract_cell_folder = sys.argv[2]
 fileNamePrefix = 'file'
 
 def verify_input():
@@ -292,13 +292,22 @@ os.makedirs(extract_cell_folder)
 extract_cell()
 process_table()
 print("========Final value=====")
+output_filename = os.path.join(os.path.dirname(input_filename), "result.txt")
+fout = open(output_filename, 'w')
 for i in range(1, num_row + 1):
+    fout.write(','.join([
+        row[i]['num'],
+        row[i]['big'],
+        row[i]['small'],
+        row[i]['roll'],
+        row[i]['del'],
+    ]) + '\n')
     print("====Row %d====" % i)
     print("Num: " + row[i]['num'])
     print("B:   " + row[i]['big'])
     print("S:   " + row[i]['small'])
     print("R:   " + row[i]['roll'])
-
+fout.close()
 expected_filename = input_filename + ".exp"
 if os.path.isfile(expected_filename):
     verify_result(expected_filename)

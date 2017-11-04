@@ -49,11 +49,7 @@ def index(request):
         {'items': imgs},
     )
 
-register = template.Library()
 
-@register.filter
-def add30(value, arg):
-    return value + arg 
 
 @login_required
 def verify(request, id):
@@ -64,26 +60,37 @@ def verify(request, id):
     # Download file to local folder
     item = ImageSheet.objects.get(pk=id)
     user_name = request.user.get_username()
+    local_output_folder = os.path.join('/tmp', user_name, id)
     file_name = user_name + '/' + item.file_id 
     s3_file = default_storage.open(file_name, 'r')
-    local_file = os.path.join('/tmp/', file_name)
-    with open('/tmp/'+ file_name, 'wb') as f:
+    local_file = os.path.join(local_output_folder, item.file_id)
+    if not os.path.exists(os.path.dirname(local_file)):
+        try:
+            os.makedirs(os.path.dirname(local_file))
+        except OSError as exc: # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise
+    with open(local_file, 'wb') as f:
         myfile = File(f)
         myfile.write(s3_file.read())
     myfile.closed
     f.closed    
 
     # Run the prediction process for the file just downloaded
-    print("Local file name :" + local_file)
-    result = subprocess.check_output(["./run_prediction.sh", local_file], shell=True)
-    #print("Result=" + str(result))
-
-
+    local_output_folder_cells = os.path.join(local_output_folder, 'cells')
+    result = subprocess.check_output(["./run_prediction.sh " + local_file + " " + local_output_folder_cells], shell=True)
+    # The result is written in result.txt
+    output_result = os.path.join(local_output_folder, 'result.txt')
+    with open(output_result) as f:
+        content = f.readlines()
+    content = [x.strip() for x in content] 
+    result = [x.split(",") for x in content]
     # Render the HTML template index.html with the data in the context variable
     return render(
         request,
         'verify.html', {
-             'n' : range(1, 31), 
+             'n' : range(0, 30), 
              'item': item,
+             'result': result,
         },
     )
