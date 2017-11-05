@@ -19,6 +19,13 @@ from django.conf.urls import include
 from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
+from rest_framework import routers
+from catalog import views
+
+router = routers.DefaultRouter()
+router.register(r'users', views.UserViewSet)
+router.register(r'groups', views.GroupViewSet)
+
 
 
 urlpatterns = [
@@ -37,4 +44,16 @@ urlpatterns += [
     url(r'^accounts/', include('django.contrib.auth.urls')),
 ]
 
+urlpatterns += [ 
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+]
+
+
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Wire up our API using automatic URL routing.
+# Additionally, we include login URLs for the browsable API.
+urlpatterns += [
+    url(r'^', include(router.urls)),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+]
