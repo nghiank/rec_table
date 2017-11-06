@@ -14,6 +14,11 @@ from django.core.files.storage import FileSystemStorage
 from django.core.files.storage import default_storage
 from django.shortcuts import render
 
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
@@ -28,7 +33,17 @@ class GroupViewSet(viewsets.ModelViewSet):
     """
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    
+
+@api_view(['POST'])
+def save_expected_result(request):
+    """
+    API endpoint to save the expected result
+    """
+    if request.method != 'POST':
+        return Response("Your expected result is saved successfully", status=status.HTTP_404_NOT_FOUND)
+    print("aaaa=" + str(request.data))
+    return Response("Your expected result is saved successfully", status=status.HTTP_200_OK)
+
 @login_required
 def index(request):
     """

@@ -1,11 +1,12 @@
 {% extends "base_generic.html" %}
 {% block content %}
 {% load list_filter %}
+{% load static %}
 <div class="jumbotron">
     <div class="container">
     <h1 class="display-5">Verify</h1>
-    <a href={{item.url}}>{{ item.file_id }}</a>    
-    <form method="post" enctype="multipart/form-data">
+    <a href={{item.url}}>Image link</a>    
+    <form action="" method="POST" id="post-form" >
         {% csrf_token %}
         <div class="row">
             <div class="order"></div>
@@ -23,21 +24,25 @@
         </div>
         {% for i in n %}
         <div class="row" id="row{{i}}">
-            <input class="order" value='{{i | add:"1"}}'/>
-            <input class="num" placeholder='{{result | list_index:i | list_index:0 }}' />
-            <input class="big" placeholder='{{result | list_index:i | list_index:1 }}'/>
-            <input class="small" placeholder='{{result | list_index:i | list_index:2 }}'/>
-            <input class="roll" placeholder='{{result | list_index:i | list_index:3 }}'/>
-            <input class="x" placeholder='{{result | list_index:i | list_index:4 }}'/>
-            <input class="order" value='{{ i |add:31 }}'/>
-            <input class="num" placeholder='{{result | list_index1:i | list_index:0 }}'/>
-            <input class="big" placeholder='{{result | list_index1:i | list_index:1 }}'/>
-            <input class="small" placeholder='{{result | list_index1:i | list_index:2 }}'/>
-            <input class="roll" placeholder='{{result | list_index1:i | list_index:3 }}'/>
-            <input class="x" placeholder='{{result | list_index1:i | list_index:0 }}'/>
+            <input class="order" disabled name="order" value='{{i | add:"1"}}'/>
+            <input class="num" name="num" placeholder='{{result | list_index:i | list_index:0 }}' />
+            <input class="big" name="big" placeholder='{{result | list_index:i | list_index:1 }}'/>
+            <input class="small" name="small" placeholder='{{result | list_index:i | list_index:2 }}'/>
+            <input class="roll" name="roll" placeholder='{{result | list_index:i | list_index:3 }}'/>
+            <input class="x" name="x" placeholder='{{result | list_index:i | list_index:4 }}'/>
+            <input class="order" disabled name="order" value='{{ i |add:31 }}'/>
+            <input class="num" name="num" placeholder='{{result | list_index1:i | list_index:0 }}'/>
+            <input class="big" name="big" placeholder='{{result | list_index1:i | list_index:1 }}'/>
+            <input class="small"  name="small" placeholder='{{result | list_index1:i | list_index:2 }}'/>
+            <input class="roll" name="roll" placeholder='{{result | list_index1:i | list_index:3 }}'/>
+            <input class="x" name="x" placeholder='{{result | list_index1:i | list_index:4 }}'/>
         </div>
         {% endfor %}
+        <div class="row">
+            <button class="btn btn-primary btn-lg verify-btn" type="submit">Save</button>
+        </div>
     </form>
     </div>
 </div>
+<script src="{% static 'js/verify.js' %}"></script>
 {% endblock %}
