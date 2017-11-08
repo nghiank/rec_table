@@ -3,8 +3,12 @@ from django import template
 register = template.Library()
 @register.filter()
 def list_index(value, arg):
-    return value[arg]
+    if arg < len(value):
+        return value[arg]
+    return ''
 
 @register.filter()
 def list_index1(value, arg):
-    return value[arg + 30]
+    if arg + 30 < len(value):
+        return value[arg + 30]
+    return ''

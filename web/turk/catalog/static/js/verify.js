@@ -80,10 +80,8 @@ $('#post-form').on('submit', function(event){
     if (error) {
         return;
     }
-
-
     $.ajax({
-        url: '/catalog/save_expected',
+        url: $('#post-form').attr('action'),
         type: 'POST',
         data: formData,
         async: false,
