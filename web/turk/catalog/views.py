@@ -81,13 +81,13 @@ def index(request):
     View function for home page of site.
     """
     imgs = ImageSheet.objects.filter(username__exact=request.user.get_username())
+    user_name = request.user.get_username()
     if request.method == 'POST' and request.FILES['myfile']:
         f = request.FILES['myfile']
         name, extension = os.path.splitext(f.name)
         if extension.upper() not in ['.PNG', '.JPG', '.JPEG']:
             return render(request, 'index.html', {'error':'Invalid image file extension ' + extension})
         file_id = str(uuid.uuid4()) + extension 
-        user_name = request.user.get_username()
         file_name = user_name + '/' + file_id 
         file = default_storage.open(file_name, 'w')
         for chunk in f.chunks():
@@ -103,14 +103,15 @@ def index(request):
             request,
             'index.html',
             {'msg': 'You succesfully uploaded the image:' + file_id,
-             'items':imgs},
+             'items':imgs, 
+             'username': user_name},
         )
 
     # Render the HTML template index.html with the data in the context variable
     return render(
         request,
         'index.html', 
-        {'items': imgs},
+        {'items': imgs, 'username': user_name},
     )
 
 
@@ -150,7 +151,6 @@ def verify(request, id):
     content = [x.strip() for x in content] 
     result = [x.split(",") for x in content]
     expected_results = ExpectedResult.objects.filter(image_sheet=item)
-    print("Value of expected:" + str(expected_results))
     # Render the HTML template index.html with the data in the context variable
     er = []
     for i in range(0,60):
@@ -171,5 +171,6 @@ def verify(request, id):
              'item': item,
              'result': result,
              'expected_results': er,
+             'username': user_name,
         },
     )

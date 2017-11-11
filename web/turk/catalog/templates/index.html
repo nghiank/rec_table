@@ -1,5 +1,6 @@
 {% extends "base_generic.html" %}
 {% block content %}
+{% load list_filter %}
 <div class="jumbotron">
     <div class="container">
     <h1 class="display-5">Uploader</h1>
@@ -26,7 +27,11 @@
     <ul class="list-group">  
     {% for item in items %}
         <li class="list-group-item">
-            <a href={{item.url}}>{{ item.file_id }}</a>    
+            {% with user_name=username  %}
+                <a href='{{ item.file_id | file_id_to_filename:user_name | filename_to_url }}'>
+                    {{ item.file_id}}
+                </a>    
+            {% endwith %}
             {% ifequal item.state 'FR' %}
             <span class="badge badge-secondary">{{ item.get_state_display }}</span>
             {% endifequal %}

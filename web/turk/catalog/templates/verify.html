@@ -5,7 +5,9 @@
 <div class="jumbotron">
     <div class="container">
     <h1 class="display-5">Verify</h1>
-    <a href={{item.url}}>Image link</a>    
+    {% with user_name=username  %}
+        <a href={{ item.file_id | file_id_to_filename:user_name | filename_to_url }}>Image link</a>    
+    {% endwith %}
     <form action="{% url 'save_expected' id=item.id%}" method="POST" id="post-form" >
         {% csrf_token %}
         <div class="row">
