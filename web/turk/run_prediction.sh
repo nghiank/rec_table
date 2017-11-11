@@ -1,6 +1,6 @@
-echo "aaaaaaaaaaaaaaaaaaaaaaaaaInput:" + "$@" 
 source ~/tensorflow/bin/activate
-pushd ../../end_to_end/
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+pushd "$DIR/../../end_to_end/"
 echo "Input:" + "$@" 
 python3 rec_table.py "$@"
 popd
