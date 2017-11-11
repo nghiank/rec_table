@@ -143,7 +143,9 @@ def verify(request, id):
 
     # Run the prediction process for the file just downloaded
     local_output_folder_cells = os.path.join(local_output_folder, 'cells')
-    result = subprocess.check_output(["./run_prediction.sh " + local_file + " " + local_output_folder_cells], shell=True)
+    prediction_path = os.path.join(os.path.dirname(__file__), '../run_prediction.sh')
+    print("path=" + prediction_path)
+    result = subprocess.check_output([prediction_path + " " + local_file + " " + local_output_folder_cells], shell=True)
     # The result is written in result.txt
     output_result = os.path.join(local_output_folder, 'result.txt')
     with open(output_result) as f:
