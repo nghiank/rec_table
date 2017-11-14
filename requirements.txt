@@ -1,5 +1,4 @@
 awsebcli==3.12.0
-bleach==1.5.0
 blessed==1.14.2
 boto3==1.4.7
 botocore==1.7.28
@@ -13,15 +12,12 @@ docker-py==1.7.2
 dockerpty==0.4.1
 docopt==0.6.2
 docutils==0.14
-enum34==1.1.6
-html5lib==0.9999999
 jmespath==0.9.3
 Markdown==2.6.9
 numpy==1.13.3
 olefile==0.44
 pathspec==0.5.0
 Pillow==4.3.0
-protobuf==3.4.0
 psycopg2==2.7.3.1
 python-dateutil==2.6.1
 pytz==2017.2
@@ -31,10 +27,7 @@ s3transfer==0.1.11
 semantic-version==2.5.0
 six==1.11.0
 tabulate==0.7.5
-tensorflow==1.4.0
-tensorflow-tensorboard==0.4.0rc2
 termcolor==1.1.0
 virtualenv==15.1.0
 wcwidth==0.1.7
 websocket-client==0.44.0
-Werkzeug==0.12.2
