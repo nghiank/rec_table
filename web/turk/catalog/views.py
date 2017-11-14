@@ -125,7 +125,7 @@ def verify(request, id):
     # Download file to local folder
     item = ImageSheet.objects.get(pk=id)
     user_name = request.user.get_username()
-    local_output_folder = os.path.join('/tmp', user_name, id)
+    local_output_folder = os.path.join('~/tmp', user_name, id)
     file_name = user_name + '/' + item.file_id 
     s3_file = default_storage.open(file_name, 'r')
     local_file = os.path.join(local_output_folder, item.file_id)
