@@ -2,6 +2,7 @@ import os
 import uuid
 import subprocess
 
+from os.path import expanduser
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from .serializers import UserSerializer, GroupSerializer
@@ -125,7 +126,8 @@ def verify(request, id):
     # Download file to local folder
     item = ImageSheet.objects.get(pk=id)
     user_name = request.user.get_username()
-    local_output_folder = os.path.join('~/tmp', user_name, id)
+    home = expanduser("~")
+    local_output_folder = os.path.join(home, '/tmp', user_name, id)
     file_name = user_name + '/' + item.file_id 
     s3_file = default_storage.open(file_name, 'r')
     local_file = os.path.join(local_output_folder, item.file_id)
