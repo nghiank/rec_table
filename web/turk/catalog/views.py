@@ -1,5 +1,6 @@
 import os
 import uuid
+import shutil
 import subprocess
 
 from os.path import expanduser
@@ -122,7 +123,6 @@ def verify(request, id):
     """
     Allow user to enter expected value
     """
-
     # Download file to local folder
     item = ImageSheet.objects.get(pk=id)
     user_name = request.user.get_username()
@@ -142,9 +142,12 @@ def verify(request, id):
         myfile.write(s3_file.read())
     myfile.closed
     f.closed    
-
     # Run the prediction process for the file just downloaded
     local_output_folder_cells = os.path.join(local_output_folder, 'cells')
+    if os.path.isdir(local_output_folder_cells):
+        shutil.rmtree(local_output_folder_cells)
+    os.makedirs(local_output_folder_cells)
+
     prediction_path = os.path.join(os.path.dirname(__file__), '../run_prediction.sh')
     result = subprocess.check_output([prediction_path + " " + local_file + " " + local_output_folder_cells], shell=True)
     # The result is written in result.txt
