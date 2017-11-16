@@ -1,6 +1,7 @@
 import os
+import os.path
 from .base import *
-
+SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
