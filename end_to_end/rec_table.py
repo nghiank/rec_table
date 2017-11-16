@@ -1,6 +1,6 @@
 import sys, os, shutil
 from subprocess import Popen, PIPE
-import PIL import Image, ImageFilter
+from PIL import Image, ImageFilter
 import tensorflow as tf
 import numpy as np
 

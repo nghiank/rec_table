@@ -2,6 +2,7 @@ import os
 import uuid
 import shutil
 import subprocess
+import logging
 
 from os.path import expanduser
 from django.contrib.auth.models import User, Group
@@ -23,6 +24,7 @@ from rest_framework.response import Response
 from django.db import transaction
 
 NROW = 60
+log = logging.getLogger(__name__)
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -150,6 +152,7 @@ def verify(request, id):
 
     prediction_path = os.path.join(os.path.dirname(__file__), '../run_prediction.sh')
     result = subprocess.check_output([prediction_path + " " + local_file + " " + local_output_folder_cells], shell=True)
+    log.info(result)
     # The result is written in result.txt
     output_result = os.path.join(local_output_folder, 'result.txt')
     with open(output_result) as f:
