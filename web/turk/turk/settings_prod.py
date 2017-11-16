@@ -1,7 +1,6 @@
 import os
-import os.path
 from .base import *
-SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+DEBUG_LOG_DIR = '/var/log/app_logs'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -19,7 +18,7 @@ LOGGING = {
         'logfile': {
             'level':'DEBUG',
             'class':'logging.handlers.RotatingFileHandler',
-            'filename': SITE_ROOT + "/logfile",
+            'filename': DEBUG_LOG_DIR + "/logfile",
             'maxBytes': 50000,
             'backupCount': 2,
             'formatter': 'standard',
@@ -68,7 +67,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'turk.wsgi.application'
-DEBUG_LOG_DIR = '/var/log/app_logs/django_debug.log'
 # Database
 # brew install postgresm/en/1.11/ref/settings/#databases
 DATABASES = {
