@@ -2,10 +2,9 @@ CMakeFiles
 CMakeCache.txt
 cmake_install.cmake
 *.o
-../extract_cell
 ../segment
-extract_cell
 .DS_Store
+extract_cell
 end_to_end/.DS_Store
 segmentation/segment
 train/emnist.pyc
