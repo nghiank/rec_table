@@ -1,5 +1,5 @@
-TENSORFLOW_PATH = "/opt/python/current/app/tensorflow"
-if [ ! -d  $TENSORFLOW_PATH]; then
+TENSORFLOW_PATH="/opt/python/current/app/tensorflow"
+if [ ! -d  $TENSORFLOW_PATH ]; then
     mkdir $TENSORFLOW_PATH
 fi
 virtualenv --system-site-packages -p python $TENSORFLOW_PATH 
