@@ -1,5 +1,5 @@
 #!/bin/bash
-TENSORFLOW_PATH="/opt/python/current/app/tensorflow"
+TENSORFLOW_PATH=/opt/python/current/app/tensorflow
 if [ ! -d  $TENSORFLOW_PATH ]; then
     mkdir $TENSORFLOW_PATH
 fi
