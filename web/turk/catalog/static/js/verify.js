@@ -38,7 +38,15 @@ isValidX = (x) => {
 
 showError = (i, str) => {
     alert("Error at row:" + i + ", invalid value of " + str);
-}
+};
+
+setLoading = (isLoading) => {
+    if (isLoading) {
+        $('#loading').show();
+    } else {
+        $('#loading').hide();
+    }
+};
 
 // Submit post on submit
 $('#post-form').on('submit', function(event){
@@ -80,13 +88,19 @@ $('#post-form').on('submit', function(event){
     if (error) {
         return;
     }
+    setLoading(true);
     $.ajax({
         url: $('#post-form').attr('action'),
         type: 'POST',
         data: formData,
         async: false,
         success: function (data) {
+            setLoading(false);
             alert(data)
+        },
+        error: function() {
+            setLoading(false);
+            alert("Internal error - Please contact Nghia");
         },
         cache: false,
         contentType: false,

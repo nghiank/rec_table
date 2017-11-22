@@ -86,3 +86,17 @@ body {
 :-moz-placeholder { /* Firefox 18- */
   color: pink;
 }
+
+#loading {
+  position:fixed;
+  height: 100%;
+  width: 100%;
+  display: none;
+  background: rgba(0, 0, 0, 0.3); 
+}
+
+#loading img {
+  position: fixed;
+  top:50%;
+  left: 50%;
+}
