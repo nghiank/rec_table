@@ -5,6 +5,7 @@ botocore==1.7.28
 cement==2.8.2
 colorama==0.3.7
 Django==1.11.6
+django-background-tasks==1.1.12
 django-filter==1.1.0
 django-storages==1.6.5
 djangorestframework==3.7.1

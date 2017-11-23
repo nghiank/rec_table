@@ -32,6 +32,7 @@ class Cell(models.Model):
     Model representing the cell we extracted from ImageSheet
     """
     url = models.CharField(max_length=254, help_text="File URL")
+    file_path = models.CharField(max_length=254, help_text="S3 relative file path")
     expected_char = models.CharField(max_length=1, help_text="Expected character")
     predicted_char = models.CharField(max_length=1, help_text="Predicted_character")
     image_sheet = models.ForeignKey(ImageSheet, on_delete=models.CASCADE)
@@ -39,6 +40,8 @@ class Cell(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
         return self.url
+    class Meta:
+        unique_together = ('image_sheet', 'file_path')
 
 class ExpectedResult(models.Model):
     """
