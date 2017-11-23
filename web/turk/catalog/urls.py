@@ -6,5 +6,6 @@ urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^verify/(?P<id>[0-9a-f-.]+)$', views.verify, name='verify'),
     url(r'^save_expected/(?P<id>[0-9a-f-.]+)$', views.save_expected_result, name='save_expected'),
+    url(r'^train$', views.train, name='train'),
 ]
 

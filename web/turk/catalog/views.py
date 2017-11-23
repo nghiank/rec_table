@@ -8,9 +8,9 @@ from .constants import NROW
 from .data_util import read_expected_result
 from .models import ExpectedResult
 from .models import ImageSheet
-from .path_util import get_local_output_folder, get_local_output_cells
+from .path_util import get_local_output_folder, get_local_output_cells, get_local_train_folder
 from .serializers import UserSerializer, GroupSerializer
-from .tasks import upload_prediction_images
+from .tasks import upload_prediction_images, training_local_data
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
@@ -53,6 +53,16 @@ def read_in_chunks(file_object, chunk_size=1024):
         if not data:
             break
         yield data
+@api_view(['POST'])
+def train(request):
+    """
+    Start the training task.
+    """
+    train_folder = os.path.dirname(get_local_train_folder(user_name, '1'))
+    if not os.path.exists(train_folder):
+        return Response("You do not have any file in local train folder on the server yet, please verify your image uploaded first", status=status.HTTP_200_OK)
+    training_local_data()
+
 
 @api_view(['POST'])
 def save_expected_result(request, id):

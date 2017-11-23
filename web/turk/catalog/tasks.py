@@ -5,7 +5,7 @@ from .constants import NROW
 from .data_util import read_expected_result
 from .models import Cell
 from .models import ImageSheet
-from .path_util import get_local_output_folder, get_local_output_cells
+from .path_util import get_local_output_folder, get_local_output_cells, get_local_train_folder
 from background_task import background
 from django.contrib.auth.models import User
 from django.core.files import File
@@ -48,8 +48,6 @@ def get_file_name(row, col, sub_col, folder):
 def get_s3_folder_cells(user_name, id, file_order):
     return os.path.join(user_name, 'cells', str(id), str(file_order) + FILE_EXT)
 
-def get_local_train_folder(user_name, label):
-    return os.path.join('/tmp', user_name, 'training-images', str(label))
 
 def get_local_new_train_data(user_name, label, id, file_order):
     return os.path.join(get_local_train_folder(user_name, label), str(id) + '_' + str(file_order) + FILE_EXT)
@@ -101,3 +99,10 @@ def upload_prediction_images(user_name, id):
                     write_cell_data(s3_file_name, v, item)
     item.state = ImageSheet.PROCESSED
     item.save()
+
+#@background(schedule=60)
+def training_local_data(user_name):
+    neural_net_folder = get_neural_net_data(user_name)
+    if not os.path.exists(train_folder):
+        os.makedirs(train_folder) 
+    

@@ -58,3 +58,16 @@ class ExpectedResult(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     class Meta:
         unique_together = ('image_sheet', 'order')
+
+class UserNeuralNet(models.Model):
+    """
+    Model representing the neural net customized for each user
+    """
+    username = models.CharField(max_length=50, help_text="Username")
+    data_name = models.CharField(max_length=20, help_text="Data name")
+    file_path = models.CharField(max_length=254, help_text="S3 relative file path")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        unique_together = ('username', 'data_name')
+    
