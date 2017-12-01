@@ -1,6 +1,7 @@
 import os
 from .base import *
 
+TRAINING_DIR = '/Users/nghia/rec_table/train/checkpoint'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

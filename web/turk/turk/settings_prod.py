@@ -1,6 +1,7 @@
 import os
 from .base import *
 DEBUG_LOG_DIR = '/var/log/app_logs'
+TRAINING_DIR = '/opt/python/current/app/train/checkpoint'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,

@@ -1,11 +1,16 @@
 import os
+import shutil
+import json
+
 from shutil import copyfile
 
 from .constants import NROW
 from .data_util import read_expected_result
+from .mnist_util import convert_to_mnist
 from .models import Cell
 from .models import ImageSheet
-from .path_util import get_local_output_folder, get_local_output_cells, get_local_train_folder
+from .models import UserNeuralNet
+from .path_util import get_local_output_folder, get_local_output_cells, get_local_train_folder, get_neural_net_data_folder, get_local_test_folder, get_local_train_folder_for_label 
 from background_task import background
 from django.contrib.auth.models import User
 from django.core.files import File
@@ -13,6 +18,9 @@ from django.core.files.storage import default_storage
 from django.db import transaction
 from pathlib import Path
 from django.db import IntegrityError
+from django.conf import settings
+from channels import Group
+
 
 FILE_EXT = '.png'
 attr = ['num', 'big', 'small', 'roll', 'del']
@@ -50,7 +58,7 @@ def get_s3_folder_cells(user_name, id, file_order):
 
 
 def get_local_new_train_data(user_name, label, id, file_order):
-    return os.path.join(get_local_train_folder(user_name, label), str(id) + '_' + str(file_order) + FILE_EXT)
+    return os.path.join(get_local_train_folder_for_label(user_name, label), str(id) + '_' + str(file_order) + FILE_EXT)
 
 def write_cell_data(s3_file_name, v, item):
     cell = Cell.objects.update_or_create(
@@ -68,6 +76,7 @@ def upload_prediction_images(user_name, id):
     print("StartIndex=" + str(start_index))
     local_output_folder_cells = get_local_output_cells(user_name, id)
     for i in range(0, NROW):
+        print("Processing row=" + str(i))
         for j in range(0, len(attr)): # Go through all columns.
             for k in range(0, max_length[j]): # For each digit of each column.
                 # Extract label from the expected result firt
@@ -81,9 +90,10 @@ def upload_prediction_images(user_name, id):
                     local_file_name,file_order = get_file_name(i, j, k, local_output_folder_cells)
                     my_file = Path(local_file_name)
                     if not my_file.is_file():
+                        print("Path is invalid:" + str(local_file_name))
                         continue
                     train_file_path = get_local_new_train_data(user_name, v, id, file_order)
-                    train_folder = get_local_train_folder(user_name, v)
+                    train_folder = get_local_train_folder_for_label(user_name, v)
                     if not os.path.exists(train_folder):
                         os.makedirs(train_folder)
                     copyfile(local_file_name, train_file_path)
@@ -100,9 +110,56 @@ def upload_prediction_images(user_name, id):
     item.state = ImageSheet.PROCESSED
     item.save()
 
+def copy_neural_net(dest_folder):
+    if os.path.exists(dest_folder): 
+        shutil.rmtree(dest_folder)
+    shutil.copytree(settings.TRAINING_DIR, dest_folder)
+
+def send_log(user_name, log_message):
+    Group('user-' + user_name).send({
+        "text": json.dumps({
+            "log": log_message
+        })
+    })
+
 #@background(schedule=60)
 def training_local_data(user_name):
-    neural_net_folder = get_neural_net_data(user_name)
-    if not os.path.exists(train_folder):
-        os.makedirs(train_folder) 
+    print('Process training_local_data:' + user_name)
+    neural_net_folder = get_neural_net_data_folder(user_name)
+    if not os.path.exists(neural_net_folder):
+        os.makedirs(neural_net_folder)
+    current_data = UserNeuralNet.objects.filter(username=user_name)
+    if not current_data:
+        send_log(user_name, 'Copy the default neural net from the system...')
+        copy_neural_net(neural_net_folder)
+        send_log(user_name, 'DONE Copy the default neural net from the system.')
+    else:
+        send_log(user_name, 'Download the user neural net from S3...')
+        # Download from S3
+        send_log(user_name, 'DONE Copy the default neural net from the system.')
+    
+    training_image_dir = get_local_train_folder(user_name)
+    test_image_dir = get_local_test_folder(user_name)
+
+    if os.path.exists(test_image_dir): 
+        shutil.rmtree(test_image_dir)
+    shutil.copytree(training_image_dir, test_image_dir)
+
+    result_folder = os.path.join(os.path.dirname(test_image_dir), 'mnist')
+    accepted_label = '0123456789xXrikRIK' 
+    convert_to_mnist(training_image_dir, test_image_dir, result_folder, accepted_label) 
+    
+    send_log(user_name, 'Save the training-images to MNIST format...')
+    send_log(user_name, 'DONE Save the training-images to MNIST format...')
+    
+
+
+    
+
+        
+
+
+    
+
+    
     

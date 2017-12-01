@@ -53,15 +53,6 @@ def read_in_chunks(file_object, chunk_size=1024):
         if not data:
             break
         yield data
-@api_view(['POST'])
-def train(request):
-    """
-    Start the training task.
-    """
-    train_folder = os.path.dirname(get_local_train_folder(user_name, '1'))
-    if not os.path.exists(train_folder):
-        return Response("You do not have any file in local train folder on the server yet, please verify your image uploaded first", status=status.HTTP_200_OK)
-    training_local_data()
 
 
 @api_view(['POST'])
@@ -136,6 +127,7 @@ def index(request):
             'index.html',
             {'msg': 'You succesfully uploaded the image:' + file_id,
              'items':imgs, 
+             'error': None,
              'username': user_name},
         )
 
@@ -143,7 +135,10 @@ def index(request):
     return render(
         request,
         'index.html', 
-        {'items': imgs, 'username': user_name},
+        {'items': imgs, 
+        'msg': None,
+        'error': None,
+        'username': user_name},
     )
 
 
@@ -159,11 +154,12 @@ def verify(request, id):
     file_name = user_name + '/' + item.file_id 
     s3_file = default_storage.open(file_name, 'r')
     local_file = os.path.join(local_output_folder, item.file_id)
-    #print("Local file=" + local_file)
+    print("Local file=" + local_file)
     if not os.path.exists(os.path.dirname(local_file)):
         try:
             os.makedirs(os.path.dirname(local_file))
         except OSError as exc: # Guard against race condition
+            print("Exception happening##################################")
             if exc.errno != errno.EEXIST:
                 raise
     with open(local_file, 'wb') as f:
@@ -179,8 +175,10 @@ def verify(request, id):
 
     prediction_path = os.path.join(os.path.dirname(__file__), '../run_prediction.sh')
     cmd = prediction_path + " " + local_file + " " + local_output_folder_cells
+    print("Running prediction: " + cmd)
     result = subprocess.check_output([cmd], shell=True)
-    log.info(result)
+    print("Done prediction: " + cmd)
+    print("Result=" + str(result))
     result, er = read_expected_result(local_output_folder, item)
     return render(
         request,
@@ -191,4 +189,26 @@ def verify(request, id):
              'expected_results': er,
              'username': user_name,
         },
+    )
+
+@login_required
+def train(request):
+    """
+    View function for home page of site.
+    """
+    user_name = request.user.get_username()
+    if not os.path.exists(get_local_train_folder(user_name)):
+        # Render the HTML template index.html with the data in the context variable
+        return render(
+            request,
+            'train.html', 
+            {'username': user_name},
+        )
+    #training_local_data(user_name, schedule=1)
+    training_local_data(user_name)
+    # Render the HTML template index.html with the data in the context variable
+    return render(
+        request,
+        'train.html', 
+        {'username': user_name},
     )

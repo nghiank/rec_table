@@ -32,15 +32,16 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'background_task',
+    'catalog.apps.CatalogConfig', 
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sessions',
     'django.contrib.staticfiles',
-    'storages',
-    'catalog.apps.CatalogConfig', 
     'rest_framework',
+    'storages',
 ]
 
 REST_FRAMEWORK = {
@@ -126,10 +127,20 @@ LOGGING = {
         },
     },
     'loggers': {
-        'django': {
+        'django.db.backends': {
             'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
+            'level': 'ERROR',
+            'propagate': False,
         },
+    },
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+        },
+        "ROUTING": "catalog.routing.channel_routing",
     },
 }
