@@ -275,7 +275,7 @@ def read_data_sets(train_dir,
   validation_images,validation_labels = filter_subset(validation_images, validation_labels, subset)
   test_images, test_labels = filter_subset(test_images, test_labels, subset)
   
-  train_labels = remapping(train_labels, subset);
+  train_labels = remapping(train_labels, subset)
   validation_labels = remapping(validation_labels, subset)
   test_labels = remapping(test_labels, subset)
 
