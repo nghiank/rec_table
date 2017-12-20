@@ -35,7 +35,7 @@ start = time.clock()
 
 trained_filename = sys.argv[1]
 subset = sys.argv[2].split(',')
-for i in xrange(len(subset)):
+for i in range(len(subset)):
     subset[i] = int(subset[i])
 mapping = sys.argv[3].split(',')
 print("subset=", subset)
@@ -46,7 +46,7 @@ mnist = emnist.read_data_sets('data/emnist', subset = subset)
 
 image_size = 28
 num_label = len(subset)
-num_steps = 5 
+num_steps = 50 
 
 graph = tf.Graph()
 print("Start training..., number of steps = ", num_steps)
@@ -85,6 +85,8 @@ with graph.as_default():
     train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
     correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    tf.add_to_collection('accuracy', accuracy)
+    tf.add_to_collection("train_step", train_step)
 
 print('mnist.test_images.shape', mnist.test.images.shape)
 print('mnist.test_labels.shape', mnist.test.labels.shape)

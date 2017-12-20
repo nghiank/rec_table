@@ -20,6 +20,7 @@ from pathlib import Path
 from django.db import IntegrityError
 from django.conf import settings
 from channels import Group
+from PIL import Image, ImageFilter
 
 
 FILE_EXT = '.png'
@@ -66,6 +67,45 @@ def write_cell_data(s3_file_name, v, item):
         expected_char=v,
         image_sheet=item)
 
+def upload_file(s3_file_name, local_file_name):
+    file = default_storage.open(s3_file_name, 'w')
+    with open(local_file_name, 'rb') as f:
+        local_file = File(f)
+        for chunk in local_file.chunks():
+            file.write(chunk)
+    file.close()
+    f.close()
+
+def imageprepare(filename, newfilename):
+    """
+    This function returns the pixel values.
+    The imput is a png file location.
+    """
+    im = Image.open(filename).convert('L')
+    width = float(im.size[0])
+    height = float(im.size[1])
+    newImage = Image.new('L', (28, 28), (0)) #creates white canvas of 28x28 pixels
+    if width > height: #check which dimension is bigger
+        #Width is bigger. Width becomes 20 pixels.
+        nheight = int(round((20.0/width*height),0)) #resize height according to ratio width
+        if (nheight == 0): #rare case but minimum is 1 pixel
+            nheight = 1
+        # resize and sharpen
+        img = im.resize((20,nheight), Image.ANTIALIAS).filter(ImageFilter.SHARPEN)
+        wtop = int(round(((28 - nheight)/2),0)) #caculate horizontal pozition
+        newImage.paste(img, (4, wtop)) #paste resized image on white canvas
+    else:
+        #Height is bigger. Heigth becomes 20 pixels. 
+        nwidth = int(round((20.0/height*width),0)) #resize width according to ratio height
+        if (nwidth == 0): #rare case but minimum is 1 pixel
+            nwidth = 1
+         # resize and sharpen
+        img = im.resize((nwidth,20), Image.ANTIALIAS).filter(ImageFilter.SHARPEN)
+        wleft = int(round(((28 - nwidth)/2),0)) #caculate vertical pozition
+        newImage.paste(img, (wleft, 4)) #paste resized image on white canvas
+    print("Saveing image " + newfilename)
+    newImage.save(newfilename)
+
 @background(schedule=60)
 def upload_prediction_images(user_name, id):
     item = ImageSheet.objects.get(pk=id)
@@ -75,6 +115,7 @@ def upload_prediction_images(user_name, id):
     result, er = read_expected_result(local_output_folder, item)
     print("StartIndex=" + str(start_index))
     local_output_folder_cells = get_local_output_cells(user_name, id)
+    files_to_upload = []
     for i in range(0, NROW):
         print("Processing row=" + str(i))
         for j in range(0, len(attr)): # Go through all columns.
@@ -96,19 +137,21 @@ def upload_prediction_images(user_name, id):
                     train_folder = get_local_train_folder_for_label(user_name, v)
                     if not os.path.exists(train_folder):
                         os.makedirs(train_folder)
-                    copyfile(local_file_name, train_file_path)
+                    new_local_file_name = local_file_name + "_new.png"
+                    imageprepare(local_file_name, new_local_file_name)
+                    copyfile(new_local_file_name, train_file_path)
                     s3_file_name = get_s3_folder_cells(user_name, id, file_order)
-                    print("Uploading fileName = " +str(s3_file_name) + " ==> " + str(v) + " from " + str(result[i][j]) + '...index...'+ str(k))
-                    file = default_storage.open(s3_file_name, 'w')
-                    with open(local_file_name, 'rb') as f:
-                        local_file = File(f)
-                        for chunk in local_file.chunks():
-                            file.write(chunk)
-                    file.close()
-                    f.close()
-                    write_cell_data(s3_file_name, v, item)
-    item.state = ImageSheet.PROCESSED
+                    files_to_upload.append((s3_file_name, new_local_file_name, v))
+    print('Uploading files to s3....')
+    for file_pair in files_to_upload:
+        s3_file_name = file_pair[0]
+        local_file_name = file_pair[1]
+        expected_char = file_pair[2]
+        upload_file(s3_file_name, local_file_name) 
+        write_cell_data(s3_file_name, expected_char, item)
+    item.state = ImageSheet.PROCESSE2
     item.save()
+    print('FINISHED uploading files to s3!')
 
 def copy_neural_net(dest_folder):
     if os.path.exists(dest_folder): 

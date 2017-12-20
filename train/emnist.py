@@ -53,8 +53,10 @@ def extract_images(f):
       raise ValueError('Invalid magic number %d in MNIST image file: %s' %
                        (magic, f.name))
     num_images = _read32(bytestream)
+    print("Numer of images:" + str(num_images))
     rows = _read32(bytestream)
     cols = _read32(bytestream)
+    print("Number of rows and cols: " + str(rows) + ", " + str(cols))
     buf = bytestream.read(rows * cols * num_images)
     data = numpy.frombuffer(buf, dtype=numpy.uint8)
     data = data.reshape(num_images, rows, cols, 1)
@@ -144,6 +146,7 @@ class DataSet(object):
       assert images.shape[0] == labels.shape[0], (
           'images.shape: %s labels.shape: %s' % (images.shape, labels.shape))
       self._num_examples = images.shape[0]
+      print("number of examples:" + str(self._num_examples))
 
       # Convert shape from [num examples, rows, columns, depth]
       # to [num examples, rows*columns] (assuming depth == 1)
@@ -195,6 +198,7 @@ class DataSet(object):
       self._images = self.images[perm0]
       self._labels = self.labels[perm0]
     # Go to the next epoch
+    print("Start = " + str(start) +" batch_size:" + str(batch_size) + " num_examples:" + str(self._num_examples))
     if start + batch_size > self._num_examples:
       # Finished epoch
       self._epochs_completed += 1
@@ -222,6 +226,7 @@ class DataSet(object):
 
 
 def read_data_sets(train_dir,
+                   prefix="emnist-byclass-",
                    subset = [0,1,2,3,4,5,6,7,8,9],
                    fake_data=False,
                    one_hot=False,
@@ -240,10 +245,10 @@ def read_data_sets(train_dir,
     test = fake()
     return base.Datasets(train=train, validation=validation, test=test)
 
-  TRAIN_IMAGES = 'emnist-byclass-train-images-idx3-ubyte.gz'
-  TRAIN_LABELS = 'emnist-byclass-train-labels-idx1-ubyte.gz'
-  TEST_IMAGES = 'emnist-byclass-test-images-idx3-ubyte.gz'
-  TEST_LABELS = 'emnist-byclass-test-labels-idx1-ubyte.gz'
+  TRAIN_IMAGES = prefix + 'train-images-idx3-ubyte.gz'
+  TRAIN_LABELS = prefix + 'train-labels-idx1-ubyte.gz'
+  TEST_IMAGES = prefix + 'test-images-idx3-ubyte.gz'
+  TEST_LABELS = prefix + 'test-labels-idx1-ubyte.gz'
 
   local_file = base.get_path(TRAIN_IMAGES, train_dir)
   with open(local_file, 'rb') as f:
@@ -261,6 +266,8 @@ def read_data_sets(train_dir,
   with open(local_file, 'rb') as f:
     test_labels = extract_labels(f, one_hot=one_hot)
 
+  print("Validation size=" + str(validation_size))
+  print("len(train_images)=" + str(len(train_images)))
   if not 0 <= validation_size <= len(train_images):
     raise ValueError(
         'Validation size should be between 0 and {}. Received: {}.'
@@ -274,6 +281,9 @@ def read_data_sets(train_dir,
   train_images, train_labels = filter_subset(train_images, train_labels, subset)
   validation_images,validation_labels = filter_subset(validation_images, validation_labels, subset)
   test_images, test_labels = filter_subset(test_images, test_labels, subset)
+
+  print("len(train_images) after filter=" + str(len(train_images)))
+  print("len(train_labels) after filter=" + str(len(train_labels)))
   
   train_labels = remapping(train_labels, subset)
   validation_labels = remapping(validation_labels, subset)
