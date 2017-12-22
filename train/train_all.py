@@ -46,7 +46,7 @@ mnist = emnist.read_data_sets('data/emnist', subset = subset)
 
 image_size = 28
 num_label = len(subset)
-num_steps = 50 
+num_steps = 20000 
 
 graph = tf.Graph()
 print("Start training..., number of steps = ", num_steps)
@@ -96,7 +96,6 @@ with tf.Session(graph=graph) as session:
     session.run(tf.global_variables_initializer())
     saver = tf.train.Saver()
     for i in range(num_steps):
-        print('step %d:' % i)
         batch = mnist.train.next_batch(num_label)
         if i % 100 == 0:
             train_accuracy = accuracy.eval(feed_dict={
@@ -105,7 +104,7 @@ with tf.Session(graph=graph) as session:
             
         train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
     print('Calculate the accuracy again test...')
-    print('-->Test accuracy %g' % accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
+    #print('-->Test accuracy %g' % accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
     saver.save(session, trained_filename)
 
 

@@ -18,14 +18,14 @@ from PIL import Image
 from tensorflow.examples.tutorials.mnist import input_data
 
 subset = [0,1,2,3,4,5,6,7,8,9,33,59]  
-#mnist = emnist.read_data_sets('/tmp/nghia/mnist', prefix="", validation_size=10, subset = subset) 
-mnist = emnist.read_data_sets('data/emnist', subset = subset)
+mnist = emnist.read_data_sets('/Users/nghia/tmp/nghia/mnist', prefix="", validation_size=10, subset = subset) 
+#mnist = emnist.read_data_sets('data/emnist', subset = subset)
 print("Number of train images=" + str(mnist.train.images.shape))
 start = time.clock()
 # Retrain from last checkpoint 
 trained_filename = '/Users/nghia/rec_table/train/checkpoint/0_9_x'
-new_trained_filename = '/Users/nghia/rec_table/train/checkpoint/new_0_9_local'
-num_steps = 1000
+new_trained_filename = '/Users/nghia/rec_table/train/checkpoint/0_9_x_new'
+num_steps = 300
 
 
 # We can now access the default graph where all our metadata has been loaded
@@ -42,7 +42,7 @@ with graph.as_default():
     accuracy = tf.get_collection('accuracy')[0]
     for i in range(num_steps):
         batch = mnist.train.next_batch(50) 
-        if i % 10 == 0:
+        if i % 100 == 0:
             train_accuracy = session.run(accuracy, feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0})
             print('step %d, training accuracy %g' % (i, train_accuracy))
             

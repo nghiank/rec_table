@@ -198,7 +198,6 @@ class DataSet(object):
       self._images = self.images[perm0]
       self._labels = self.labels[perm0]
     # Go to the next epoch
-    print("Start = " + str(start) +" batch_size:" + str(batch_size) + " num_examples:" + str(self._num_examples))
     if start + batch_size > self._num_examples:
       # Finished epoch
       self._epochs_completed += 1
