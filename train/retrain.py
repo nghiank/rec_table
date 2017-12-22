@@ -24,7 +24,7 @@ print("Number of train images=" + str(mnist.train.images.shape))
 start = time.clock()
 # Retrain from last checkpoint 
 trained_filename = '/Users/nghia/rec_table/train/checkpoint/0_9_x'
-new_trained_filename = '/Users/nghia/rec_table/train/checkpoint/0_9_x_new'
+new_trained_filename = '/Users/nghia/rec_table/train/checkpoint/0_9_x'
 num_steps = 300
 
 
@@ -48,3 +48,4 @@ with graph.as_default():
             
         session.run(train_step, feed_dict={'x:0': batch[0], 'y_:0': batch[1], keep_prob: 0.5})
     print('test accuracy %g' % session.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))    
+    new_saver.save(session, new_trained_filename)
