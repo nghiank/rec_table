@@ -128,7 +128,8 @@ def upload_prediction_images(user_name, id):
                     v = extract_character(filled_result, k)
                 # Only upload the file if character is found.
                 if v:
-                    local_file_name,file_order = get_file_name(i, j, k, local_output_folder_cells)
+                    local_file_name,file_order = get_file_name(i, j, k, local_output_folder_cells) 
+                    local_file_name = local_file_name + "_final.png"
                     my_file = Path(local_file_name)
                     if not my_file.is_file():
                         print("Path is invalid:" + str(local_file_name))
