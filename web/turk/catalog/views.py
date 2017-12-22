@@ -197,7 +197,9 @@ def train(request):
     View function for home page of site.
     """
     user_name = request.user.get_username()
+    print("Copy data....")
     if not os.path.exists(get_local_train_folder(user_name)):
+        print("path not exists:" + get_local_train_folder(user_name))
         # Render the HTML template index.html with the data in the context variable
         return render(
             request,

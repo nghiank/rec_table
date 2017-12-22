@@ -1,6 +1,7 @@
 import os
 from .base import *
 
+TMP_DIR='/Users/nghia/tmp'
 TRAINING_DIR = '/Users/nghia/rec_table/train/checkpoint'
 TEMPLATES = [
     {
