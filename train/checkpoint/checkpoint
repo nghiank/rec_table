@@ -1,2 +1,2 @@
-model_checkpoint_path: "/Users/nghia/rec_table/train/checkpoint/0_9_x_X"
-all_model_checkpoint_paths: "/Users/nghia/rec_table/train/checkpoint/0_9_x_X"
+model_checkpoint_path: "/Users/nghia/rec_table/train/checkpoint/0_9_x"
+all_model_checkpoint_paths: "/Users/nghia/rec_table/train/checkpoint/0_9_x"
