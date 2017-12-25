@@ -18,14 +18,15 @@ from PIL import Image
 from tensorflow.examples.tutorials.mnist import input_data
 
 subset = [0,1,2,3,4,5,6,7,8,9,33,59]  
+#subset = [0,1,2,3,4,5,6,7,8,9]  
 mnist = emnist.read_data_sets('/Users/nghia/tmp/nghia/mnist', prefix="", validation_size=10, subset = subset) 
 #mnist = emnist.read_data_sets('data/emnist', subset = subset)
 print("Number of train images=" + str(mnist.train.images.shape))
 start = time.clock()
 # Retrain from last checkpoint 
-trained_filename = '/Users/nghia/rec_table/train/checkpoint/0_9_x'
-new_trained_filename = '/Users/nghia/rec_table/train/checkpoint/0_9_x'
-num_steps = 300
+trained_filename = '/Users/nghia/rec_table/train/checkpoint/0_9_x_X'
+new_trained_filename = '/Users/nghia/rec_table/train/checkpoint/0_9_x_X'
+num_steps = 1000
 
 
 # We can now access the default graph where all our metadata has been loaded
