@@ -26,7 +26,7 @@
         </div>
         {% for i in n %}
         <div class="row" id="row{{i}}">
-            <input class="order" name="order" value='{{i | add:"1"}}'/>
+            <div class="order" name="order" >{{i | add:"1"}}</div>
             <input 
                 class="num" name="num" 
                 placeholder='{{result | list_index:i | list_index:0 }}' 
@@ -52,7 +52,7 @@
                 placeholder='{{result | list_index:i | list_index:4 }}'
                 value='{{expected_results | list_index:i | list_index:4 }}'
                 />
-            <input class="order" name="order" value='{{ i |add:31 }}'/>
+            <div class="order" name="order">{{ i |add:31 }}</div>
             <input 
                 class="num" name="num" 
                 placeholder='{{result | list_index1:i | list_index:0 }}'
