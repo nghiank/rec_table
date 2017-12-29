@@ -65,6 +65,7 @@ def save_expected_result(request, id):
         return Response("Error", status=status.HTTP_404_NOT_FOUND)
 
     order = request.data.getlist('order') 
+    print("order=" + str(order))
     num = request.data.getlist('num')
     big = request.data.getlist('big')
     small = request.data.getlist('small')

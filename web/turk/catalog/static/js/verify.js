@@ -48,15 +48,56 @@ setLoading = (isLoading) => {
     }
 };
 
+getColorText = (expected, predicted) => {
+    if (!expected  || expected === predicted) {
+        return "<span style='color:green;'>" + predicted +"</span>"
+    }
+    if (expected.length != predicted.length) {
+        return "<span style='color:red;'>" + predicted +"</span>"
+    }
+    let res = "";
+    for(let i = 0; i < expected.length; ++i) {
+        const color = expected[i] == predicted[i] ? 'green': 'red';
+        res += `<span style='color:${color}'>${expected[i]}</span>`;
+    }
+    return res;
+}
+
+const idPrefix = ['order', 'num', 'big', 'small', 'roll', 'x'];
+for(let j = 1 /* skip 'order' */; j < idPrefix.length; ++j) { 
+    const prefix = '#' + idPrefix[j];
+    for(var i = 0; i < 60; ++i) {
+        const id = prefix + (j+1);
+        const expected = $(id).attr('expected');
+        const predicted = $(id).attr('predicted');
+        $(id).html(getColorText(expected, predicted));
+    }
+}
+
 // Submit post on submit
 $('#post-form').on('submit', function(event){
     event.preventDefault();
     var formData = new FormData(this);
-    var num = formData.getAll('num');
-    var big = formData.getAll('big');
-    var small = formData.getAll('small');
-    var roll = formData.getAll('roll');
-    var x = formData.getAll('x');
+    let order = [];
+    let num = [];
+    let big = [];
+    let small = [];
+    let roll = [];
+    let x = [];
+    let allResults = [num, big, small, roll, x, order];
+    for(let i = 0; i < idPrefix.length; ++i) {
+        const prefix = '#' + idPrefix[i];
+        for(let j = 0; j < 60; ++j) {
+            const id = prefix + (i+1);
+            if (i != 0 ) {
+                const expected = $(id).attr('expected');
+                allResults[i].push(expected);
+            } else {
+                allResults[0].push(j);
+            }
+        }
+        formData.append(idPrefix[i], allResults[i]);
+    }
     var error = false;
     for(var i = 0; i < num.length; ++i) {
         if (!isValidNum(num[i])) {
