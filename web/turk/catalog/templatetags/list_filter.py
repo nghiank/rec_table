@@ -15,6 +15,10 @@ def list_index1(value, arg):
     return ''
 
 @register.filter()
+def multiply(value, arg):
+    return value * arg 
+
+@register.filter()
 def filename_to_url(value):
     return default_storage.url(value)
 
