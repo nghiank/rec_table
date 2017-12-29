@@ -64,14 +64,29 @@ getColorText = (expected, predicted) => {
 }
 
 const idPrefix = ['order', 'num', 'big', 'small', 'roll', 'x'];
-for(let j = 1 /* skip 'order' */; j < idPrefix.length; ++j) { 
-    const prefix = '#' + idPrefix[j];
-    for(var i = 0; i < 60; ++i) {
+for(let i = 1 /* skip 'order' */; i < idPrefix.length; ++i) { 
+    const prefix = '#' + idPrefix[i];
+    for(var j = 0; j < 60; ++j) {
         const id = prefix + (j+1);
         const expected = $(id).attr('expected');
         const predicted = $(id).attr('predicted');
         $(id).html(getColorText(expected, predicted));
     }
+}
+
+extractTextWithWhitespace = (elems) => {
+    var ret = "", elem;
+    for ( var i = 0; elems[i]; i++ ) {
+        elem = elems[i];
+        // Get the text from text nodes and CDATA nodes
+        if ( elem.nodeType === 3 || elem.nodeType === 4 ) {
+            ret += elem.nodeValue;
+        // Traverse everything else, except comment nodes
+        } else if ( elem.nodeType !== 8 ) {
+            ret += extractTextWithWhitespace( elem.childNodes );
+        }
+    }
+    return ret;
 }
 
 // Submit post on submit
@@ -84,17 +99,25 @@ $('#post-form').on('submit', function(event){
     let small = [];
     let roll = [];
     let x = [];
-    let allResults = [num, big, small, roll, x, order];
+    let allResults = [order, num, big, small, roll, x];
     for(let i = 0; i < idPrefix.length; ++i) {
         const prefix = '#' + idPrefix[i];
         for(let j = 0; j < 60; ++j) {
-            const id = prefix + (i+1);
+            const id = prefix + (j+1);
+            let result = "";
             if (i != 0 ) {
-                const expected = $(id).attr('expected');
-                allResults[i].push(expected);
+                result = extractTextWithWhitespace($(id)).trim();
+                if (!result) {
+                    result = $(id).attr('expected').trim();
+                    if (!result) {
+                        result = $(id).attr('predicted').trim();
+                    }
+                }
             } else {
-                allResults[0].push(j);
+                result = j + 1;
+
             }
+            allResults[i].push(result);
         }
         formData.append(idPrefix[i], allResults[i]);
     }

@@ -64,13 +64,12 @@ def save_expected_result(request, id):
     if request.method != 'POST':
         return Response("Error", status=status.HTTP_404_NOT_FOUND)
 
-    order = request.data.getlist('order') 
-    print("order=" + str(order))
-    num = request.data.getlist('num')
-    big = request.data.getlist('big')
-    small = request.data.getlist('small')
-    roll = request.data.getlist('roll')
-    x = request.data.getlist('x')
+    order = request.data['order'].split(",")
+    num = request.data['num'].split(",")
+    big = request.data['big'].split(",")
+    small = request.data['small'].split(",")
+    roll = request.data['roll'].split(",")
+    x = request.data['x'].split(",")
     if (not order or not num or not big or not small or not roll or not x or
         len(order)!= NROW or len(num)!= NROW or len(big)!=NROW or len(small)!=NROW or
         len(roll)!=NROW or len(x)!= NROW) :
