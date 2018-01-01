@@ -5,7 +5,7 @@ import subprocess
 import logging
 
 from .constants import NROW
-from .data_util import read_expected_result
+from .data_util import read_expected_result, read_predicted_result
 from .models import ExpectedResult
 from .models import ImageSheet
 from .path_util import get_local_output_folder, get_local_output_cells, get_local_train_folder
@@ -153,8 +153,8 @@ def verify(request, id):
     user_name = request.user.get_username()
     local_output_folder = get_local_output_folder(user_name, id)
     file_name = user_name + '/' + item.file_id 
-    s3_file = default_storage.open(file_name, 'r')
     local_file = os.path.join(local_output_folder, item.file_id)
+    s3_file = default_storage.open(file_name, 'r')
     print("Local file=" + local_file)
     if not os.path.exists(os.path.dirname(local_file)):
         try:
@@ -180,15 +180,17 @@ def verify(request, id):
     print("Running prediction: " + cmd)
     result = subprocess.check_output([cmd], shell=True)
     print("Done prediction: " + cmd)
-    print("Result=" + str(result))
-    result, er = read_expected_result(local_output_folder, item)
+    #print("Result=" + str(result))
+    predicted_result = read_predicted_result(local_output_folder)
+    stored_expected_result, expected_result_for_renderering = read_expected_result(item)
+    print("Expected result is read...Time to render")
     return render(
         request,
         'verify.html', {
              'n' : range(0, 30), 
              'item': item,
-             'result': result,
-             'expected_results': er,
+             'result': predicted_result,
+             'expected_results': expected_result_for_renderering,
              'username': user_name,
         },
     )
