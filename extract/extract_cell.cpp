@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <unordered_set>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv/cvaux.hpp>
@@ -23,12 +24,12 @@ using namespace std;
 
 /* Important threshold*/
 const int HOUGH_LINE_THRESHOLD = 500;
+const int CCA_THRESHOLD = 40;
 /* End of threshold */
 
 /* Debug purpose */
 #define ENABLE_REMOVE_BORDER 1
-#define DEBUG 1
-
+#define DEBUG 0
 
 std::string INPUT_FILE_NAME_OPTION = "--inputFileName";
 std::string OUTPUT_FOLDER_OPTION = "--outputFolder";
@@ -51,53 +52,44 @@ bool isBorderLine(const Mat& outerBox, int x1, int y1, int x2, int y2, int thres
 void getCellBorder(const Mat& outerBox, double percent_threshold, Point& cp1, Point& cp2){
     int n = outerBox.size().width - 1;
     int m = outerBox.size().height - 1;
-    int x = n / 2;
-    int y = m / 2;
-    //Move left
-    int xLeft = x;
-    while(xLeft > 0) {
-        if (isBorderLine(outerBox, xLeft, 0, xLeft, m, percent_threshold * m)) {
+    //Sweep from left to right
+    int xLeft = 0;
+    while(xLeft < n / 2) {
+        if (!isBorderLine(outerBox, xLeft, 0, xLeft, m, percent_threshold * m)) {
             break;
         }
-        xLeft--;
+        xLeft++;
     }
-    xLeft++;
 
-    //Move right
-    int xRight = x;
-    while(xRight < n) {
-        if (isBorderLine(outerBox, xRight, 0, xRight, m, percent_threshold * m)) {
+    //Sweep from right to left
+    int xRight = n;
+    while(xRight > n / 2) {
+        if (!isBorderLine(outerBox, xRight, 0, xRight, m, percent_threshold * m)) {
             break;
         }
-        xRight++;
+        xRight--;
     }
-    xRight--;
-
-    //Move up
-    int yUp = y;
-    while(yUp > 0) {
-        if (isBorderLine(outerBox, 0, yUp, n, yUp, percent_threshold * n)) {
+    //Sweep from bottom to top
+    int yUp = 0;
+    while(yUp < m / 2) {
+        if (!isBorderLine(outerBox, 0, yUp, n, yUp, percent_threshold * n)) {
             break;
         }
-        yUp--;
-    }
-    yUp++;
-    //Move down
-    int yDown = y;
-    while(yDown < m) {
-        if (isBorderLine(outerBox, 0, yDown, n, yDown, percent_threshold * n)) {
+        yUp++;
+    } 
+    //Sweep from top to bottom
+    int yDown = m;
+    while(yDown < m / 2) {
+        if (!isBorderLine(outerBox, 0, yDown, n, yDown, percent_threshold * n)) {
             break;
         }
-        yDown++;
+        yDown--;
     }
-    yDown--;
-    int sz = 7;
+    int sz = 0;
     cp1.x = xLeft + sz;
     cp1.y = yUp + sz;
-
     cp2.x = xRight - sz;
     cp2.y = yDown - sz;
-    //cout << "cp1=" << cp1 << ", cp2=" << cp2 << endl;
 }
 
 double findDstCorners(Point2f src[4], Point2f dst[4]) {
@@ -425,15 +417,11 @@ int bfs(int y, int x, const Mat& img, vector<vector<int> >& visit, int currentCn
         for(int i = 0; i < 4; ++i) {
             int y1 = p.first + dy[i];
             int x1 = p.second + dx[i];
-            if (y1<0 || x1<0 || y1>=m || x1>=n) continue;
+            if (y1<0 || x1<0 || y1==m || x1==n) continue;
             if (visit[y1][x1]!=0) continue;
             if (img.ptr(y1)[x1] != 0 ) continue;
-            if (y1 == 0 || x1 == 0 || y1 == img.rows -1 || x1 == img.cols -1) {
-                valid = false;
-            }
-            visit[y1][x1] = currentCnt;
-            q.push(make_pair(y1, x1));
-            updateCorner(p0, p1, y1, x1);
+            visit[y1][x1] = currentCnt; q.push(make_pair(y1, x1));
+                       updateCorner(p0, p1, y1, x1);
             ++total;
         }
     }
@@ -446,7 +434,7 @@ int bfs(int y, int x, const Mat& img, vector<vector<int> >& visit, int currentCn
 
 void extractDigitSection(
     const Point& p0, const Point& p1, 
-    const Mat& fullImage, vector<vector<int> >& visit, int& currentCnt, 
+    const Mat& fullImage, const Mat& fullImage_number, vector<vector<int> >& visit, int& currentCnt, 
     Mat& digit) {
     int midx = (int)((p0.x + p1.x) / 2);
     int midy = (int)((p0.y + p1.y) / 2);
@@ -455,7 +443,6 @@ void extractDigitSection(
     minEdge = minEdge * minEdge;
     int mmax = 0;
     Rect rect;
-    int sx,sy;  
     //cout << "Looking inside p0="<<p0 << ", p1=" << p1 << endl;
     for(int y = (int)p0.y; y<=(int)p1.y; ++y) {
         const uchar *row = fullImage.ptr(y);
@@ -470,15 +457,16 @@ void extractDigitSection(
             int total = bfs(y, x, fullImage, visit, currentCnt, p2, p3);
             //cout <<"Total = " << total << endl;
             if (total > mmax) {
+                /*p2.x+=2;
+                p2.y+=2;
+                p3.x-=2;
+                p3.y-=2;*/
                 rect = Rect(p2, p3);
                 mmax = total;
-                sx = x;
-                sy = y;
             }
         }
     }
-    //cout << "Rec found:" << rect << endl;
-    digit = fullImage(rect);
+    digit = fullImage_number(rect);
 }
 
 int findConnectedComponent(int y, int x, Mat& img, vector<vector<int> >& visit, int component) {
@@ -514,20 +502,22 @@ int extractDigit(Mat& digit) {
     int component = 0;
     int mmax = 0;
     int t = 0;
+    unordered_set<int> flyspeck;
     for(int y = 0; y < digit.rows; ++y) {
         for(int x = 0; x < digit.cols; ++x) {
             if (digit.ptr(y)[x] != 255 || visit[y][x] != 0) continue;
             int cnt = findConnectedComponent(y, x, digit, visit, ++component);
-            if (cnt > mmax) {
-                mmax = cnt;
-                t = component;
+            if (cnt < CCA_THRESHOLD) {
+                flyspeck.insert(component);
+            } else {
+                mmax = max(cnt, mmax);
             }
         }
     }
     if (mmax == 0) return 0;
     for(int y = 0; y < digit.rows; ++y) {
         for(int x = 0; x < digit.cols; ++x) {
-            if (visit[y][x] != t) {
+            if (flyspeck.find(visit[y][x]) != flyspeck.end()) {
                 digit.at<char>(y,x) = 0;
             }
         }
@@ -560,19 +550,26 @@ void findCellsUsingBfs(
     }
     double gapX = maxLength / numCol;
     double gapY = maxLength / numRow;
-    Mat fullImageProcessed;
-    thresholdify(undistorted, fullImageProcessed);
-    bitwise_not(fullImageProcessed, fullImageProcessed);
+
+    Mat fullImageProcessedNumber;
+    thresholdify(undistorted, fullImageProcessedNumber);
+    bitwise_not(fullImageProcessedNumber, fullImageProcessedNumber);
+    Mat fullImageProcessedBorder;
+    preprocessing(undistorted,fullImageProcessedBorder, kernel);
     #if DEBUG
-        imwrite(outputFolder + "/1.FullImageProcessed.png", fullImageProcessed);
+        imwrite(outputFolder + "/3.FullImageProcessedBorder.png", fullImageProcessedBorder);
+        imwrite(outputFolder + "/3a.FullImageProcessedNumber.png", fullImageProcessedNumber);
     #endif
-    vector<vector<int> > visit(fullImageProcessed.rows);
-    for(int i = 0; i < fullImageProcessed.rows; ++i) {
-        visit[i].resize(fullImageProcessed.cols, 0);
+    vector<vector<int> > visit(fullImageProcessedBorder.rows);
+    for(int i = 0; i < fullImageProcessedBorder.rows; ++i) {
+        visit[i].resize(fullImageProcessedBorder.cols, 0);
     }
     int currentCnt = 0;
     for(int i = 0; i < numRow; ++i) {
         for(int j = 0; j < (i==0?1:numCol); ++j) {
+            if (0 == j || 13==j) {
+                continue;
+            }
             Point p0, p1;
             p0.x = j * gapX;
             p0.y = i * gapY;
@@ -580,38 +577,26 @@ void findCellsUsingBfs(
             p1.y = p0.y + gapY;
             p1.x = std::min(int(maxLength), p1.x);
             p1.y = std::min(int(maxLength), p1.y);
-            cv::Rect rect(p0, p1); 
-            Mat rawBox, rawBoxThresholdify;
             string fileName = getFileName(i, j, numCol, outputFolder);
             cout <<"==============" << fileName << endl;
-            try{
-                rawBox = undistorted(rect);
-                imwrite(fileName + "0-Rawbox.png", rawBox);
-
-                //Adaptive thresholdify the image.
-                thresholdify(rawBox, rawBoxThresholdify);
-                bitwise_not(rawBoxThresholdify, rawBoxThresholdify);
-                imwrite(fileName+"1-Theshold.png", rawBoxThresholdify);
-
-                /// Apply the specified morphology operation
-                Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(3,3), Point(0,0));
-                Mat afterCleanImg;
-                morphologyEx(rawBoxThresholdify, afterCleanImg, MORPH_CLOSE, kernel);
-                #if DEBUG
-                    imwrite(fileName + "2-AfterMorph.png", afterCleanImg);
-                #endif
-            } catch(cv::Exception) {
-                cout << "Exception when getting raw_box rec=" << rect << endl;
-            }
-
+            // Get the largest black region, floodfill starting around the center square. 
             Mat digit;
-            extractDigitSection(p0, p1, fullImageProcessed, visit, currentCnt, digit);
+            extractDigitSection(p0, p1, fullImageProcessedBorder, fullImageProcessedNumber, visit, currentCnt, digit);
             #if DEBUG
                 imwrite(fileName + "3-ExtractTheDigitWithNoise.png", digit);
             #endif
-            int cnt = extractDigit(digit);
-            if (cnt > 40) {
-                imwrite(fileName, digit);
+            // Remove border of cells - this can lead to cell empty to be treated as non-empty
+            Point cp1, cp2;
+            getCellBorder(digit, 0.8, cp1, cp2);
+            cout << "Cell border:"<<cp1<< " " << cp2 << endl;
+            Mat section_border_removed = digit(Rect(cp1,cp2));
+            #if DEBUG
+                imwrite(fileName + "4-SectionWithBorderRemoved.png", section_border_removed);
+            #endif
+            int cnt = extractDigit(section_border_removed);
+            cout << "Count of CCA:" << cnt << endl;
+            if (cnt > CCA_THRESHOLD) {
+                imwrite(fileName, section_border_removed);
             }
         }
     }
