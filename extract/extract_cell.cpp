@@ -24,7 +24,7 @@ using namespace std;
 
 /* Important threshold*/
 const int HOUGH_LINE_THRESHOLD = 500;
-const int CCA_THRESHOLD = 40;
+const int CCA_THRESHOLD = 80;
 /* End of threshold */
 
 /* Debug purpose */
@@ -37,6 +37,7 @@ std::string DEBUG_OPTION = "--debug";
 
 bool isBorderLine(const Mat& outerBox, int x1, int y1, int x2, int y2, int threshold) {
     int cnt = 0;
+    //printf("%d %d %d %d %d\n", x1,y1,x2,y2, threshold);
     for(int y = y1; y <= y2; ++y) {
         const uchar *row = outerBox.ptr(y);
         for (int x = x1; x <= x2; ++x) {
@@ -71,7 +72,7 @@ void getCellBorder(const Mat& outerBox, double percent_threshold, Point& cp1, Po
     }
     //Sweep from bottom to top
     int yUp = 0;
-    while(yUp < m / 2) {
+    while(yUp < m/2) {
         if (!isBorderLine(outerBox, 0, yUp, n, yUp, percent_threshold * n)) {
             break;
         }
@@ -79,7 +80,7 @@ void getCellBorder(const Mat& outerBox, double percent_threshold, Point& cp1, Po
     } 
     //Sweep from top to bottom
     int yDown = m;
-    while(yDown < m / 2) {
+    while(yDown > m/2) {
         if (!isBorderLine(outerBox, 0, yDown, n, yDown, percent_threshold * n)) {
             break;
         }
@@ -300,8 +301,7 @@ void findCells(
             p0.x = p1.x;
         
             Point cp1, cp2;
-            getCellBorder(miniMat, 0.8, cp1, cp2);
-
+            getCellBorder(miniMat, 0.6, cp1, cp2);
             cv::Rect inside(cp1, cp2);
             Mat box_cell;
             try{
@@ -587,7 +587,7 @@ void findCellsUsingBfs(
             #endif
             // Remove border of cells - this can lead to cell empty to be treated as non-empty
             Point cp1, cp2;
-            getCellBorder(digit, 0.8, cp1, cp2);
+            getCellBorder(digit, 0.7, cp1, cp2);
             cout << "Cell border:"<<cp1<< " " << cp2 << endl;
             Mat section_border_removed = digit(Rect(cp1,cp2));
             #if DEBUG
