@@ -182,18 +182,20 @@ def verify(request, id):
     print("Done prediction: " + cmd)
     #print("Result=" + str(result))
     predicted_result = read_predicted_result(local_output_folder)
-    stored_expected_result, expected_result_for_renderering = read_expected_result(item)
+    expected_results = ExpectedResult.objects.filter(image_sheet=item)
     print("Expected result is read...Time to render")
+    expected_result_for_renderering = read_expected_result(expected_results) if expected_results else None
+    stored_result_before = True if expected_results else False
     return render(
         request,
         'verify.html', {
-             'n' : range(0, 30), 
-             'item': item,
-             'result': predicted_result,
-             'expected_results': expected_result_for_renderering,
-             'username': user_name,
-        },
-    )
+            'n' : range(0, 30), 
+            'item': item,
+            'result': predicted_result,
+            'stored_result_before': stored_result_before,
+            'expected_results': expected_result_for_renderering,
+            'username': user_name,
+        })
 
 @login_required
 def train(request):

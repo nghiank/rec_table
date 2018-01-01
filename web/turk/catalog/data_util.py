@@ -10,8 +10,7 @@ def read_predicted_result(local_output_folder):
     result = [x.split(",") for x in content]
     return result
 
-def read_expected_result(item):
-    expected_results = ExpectedResult.objects.filter(image_sheet=item)
+def read_expected_result(expected_results):
     er = []
     for i in range(0,60):
         er.append({})
@@ -24,4 +23,4 @@ def read_expected_result(item):
             expected_result.roll,
             expected_result.is_delete,
         ]
-    return (expected_results,er)
+    return er

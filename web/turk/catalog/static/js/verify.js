@@ -49,11 +49,18 @@ setLoading = (isLoading) => {
 };
 
 getColorText = (expected, predicted) => {
-    if (!expected  || expected === predicted) {
-        return "<span style='color:green;'>" + predicted +"</span>"
+    if (typeof expected === typeof undefined || expected === false) {
+        return "<span style='color:green;'>" + predicted + "</span>"
+    }
+    if (expected === predicted) {
+        return "<span style='color:green;'>" + expected +"</span>"
+    }
+    if (expected.length == 0) {
+        return predicted.length == 0 ? 
+            "": "<span style='color:red; background-color:red;'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
     }
     if (expected.length != predicted.length) {
-        return "<span style='color:red;'>" + predicted +"</span>"
+        return "<span style='color:red;'>" + expected +"</span>"
     }
     let res = "";
     for(let i = 0; i < expected.length; ++i) {
@@ -107,15 +114,8 @@ $('#post-form').on('submit', function(event){
             let result = "";
             if (i != 0 ) {
                 result = extractTextWithWhitespace($(id)).trim();
-                if (!result) {
-                    result = $(id).attr('expected').trim();
-                    if (!result) {
-                        result = $(id).attr('predicted').trim();
-                    }
-                }
             } else {
                 result = j + 1;
-
             }
             allResults[i].push(result);
         }
