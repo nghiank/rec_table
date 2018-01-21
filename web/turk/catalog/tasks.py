@@ -19,7 +19,7 @@ from django.db import transaction
 from pathlib import Path
 from django.db import IntegrityError
 from django.conf import settings
-from channels import Group
+#from channels import Group
 from PIL import Image, ImageFilter
 
 
@@ -160,11 +160,12 @@ def copy_neural_net(dest_folder):
     shutil.copytree(settings.TRAINING_DIR, dest_folder)
 
 def send_log(user_name, log_message):
-    Group('user-' + user_name).send({
-        "text": json.dumps({
-            "log": log_message
-        })
-    })
+    pass
+    #Group('user-' + user_name).send({
+    #    "text": json.dumps({
+    #        "log": log_message
+    #    })
+    #})
 
 #@background(schedule=60)
 def training_local_data(user_name):
