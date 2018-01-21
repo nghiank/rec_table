@@ -1,5 +1,6 @@
 import os
 from .base import *
+TMP_DIR='/tmp'
 DEBUG_LOG_DIR = '/var/log/app_logs'
 TRAINING_DIR = '/opt/python/current/app/train/checkpoint'
 LOGGING = {
