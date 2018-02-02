@@ -1,7 +1,8 @@
 import os
 from .base import *
+from os.path import expanduser
 TMP_DIR='/tmp'
-TENSORFLOW_DIR='$HOME'
+TENSORFLOW_DIR=expanduser("~")
 DEBUG_LOG_DIR = '/var/log/app_logs'
 TRAINING_DIR = '/opt/python/current/app/train/checkpoint'
 LOGGING = {
