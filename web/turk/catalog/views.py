@@ -175,7 +175,7 @@ def verify(request, id):
     os.makedirs(local_output_folder_cells)
 
     prediction_path = os.path.join(os.path.dirname(__file__), '../run_prediction.sh')
-    cmd_activate_tensorflow = "source " + os.path.join(settings.TMP_DIR,'tensorflow','bin','activate') 
+    cmd_activate_tensorflow = "source " + os.path.join(settings.TENSORFLOW_DIR,'tensorflow','bin','activate') 
     cmd = cmd_activate_tensorflow + " && " + prediction_path + " " + local_file + " " + local_output_folder_cells
     print("Running prediction: " + cmd)
     result = subprocess.check_output([cmd], shell=True)
