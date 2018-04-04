@@ -4,6 +4,7 @@ from .base import *
 TMP_DIR='/Users/nghia/tmp'
 TENSORFLOW_DIR='/Users/nghia/tmp'
 TRAINING_DIR = '/Users/nghia/rec_table/train/checkpoint'
+TRAINING_DATA_BUCKET = "training-data-dev"
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

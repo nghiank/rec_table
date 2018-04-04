@@ -40,14 +40,6 @@ showError = (i, str) => {
     alert("Error at row:" + i + ", invalid value of " + str);
 };
 
-setLoading = (isLoading) => {
-    if (isLoading) {
-        $('#loading').show();
-    } else {
-        $('#loading').hide();
-    }
-};
-
 getColorText = (expected, predicted) => {
     if (typeof expected === typeof undefined || expected === false) {
         return "<span style='color:green;'>" + predicted + "</span>"

@@ -7,7 +7,7 @@ import logging
 import collections
 
 from catalog.constants import ACCEPTED_LABEL
-from catalog.data_util import read_expected_result, read_predicted_result
+from catalog.data_util import *
 from catalog.models import ExpectedResult
 from catalog.models import ImageSheet
 from catalog.path_util import get_local_output_folder, get_local_output_cells, get_local_train_folder,get_relative_local_train_folder
@@ -37,26 +37,7 @@ def train(request):
     user_name = request.user.get_username()
 
     #Get the local folder for the images produced by verify page
-    local_image_folder = get_local_train_folder(user_name)
-    print("Local folder = " + local_image_folder)
-    label_img = {}
-    for label in os.listdir(local_image_folder): 
-        if label not in ACCEPTED_LABEL:
-            continue
-        dirname = os.path.join(local_image_folder, label)
-        print("Label name = " + dirname)
-        for file in os.listdir(dirname):
-            _, extension = os.path.splitext(file)
-            if extension not in [".png", ".jpg", "jpeg"]:
-                continue
-            if label not in label_img:
-                label_img[label] = []
-            full_path = os.path.join(get_relative_local_train_folder(user_name), label, file)
-            full_path = os.path.join('/media', full_path)
-            label_img[label].append(full_path)
-
-    print("Getting data in local folder " + dirname)
-    label_img_sorted = collections.OrderedDict(sorted(label_img.items()))
+    label_img_sorted = get_all_local_data_for_user(user_name)
     return render(
         request,
         'train.html', 

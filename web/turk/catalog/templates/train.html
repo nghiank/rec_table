@@ -1,6 +1,8 @@
 {% extends "base_generic.html" %}
 {% block content %}
 {% load static %}
+<form action="{% url 'add_training_data' %}" method="POST" id="add-training-data-form" >
+{% csrf_token %}
 <div class="jumbotron">
     <div class="container">
     <h1 class="display-5" id="train-title">Filter Images</h1>
@@ -21,4 +23,5 @@
         <button class="btn btn-primary btn-lg verify-btn" type="submit">Add To Training Data</button>
     </div>
 </div>
+</form>
 {% endblock %}

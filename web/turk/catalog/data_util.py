@@ -1,6 +1,8 @@
 import os.path
+import collections
 from .models import ExpectedResult
 from catalog.constants import *
+from catalog.path_util import *
 from PIL import Image, ImageFilter
 
 def read_predicted_result(local_output_folder):
@@ -73,3 +75,68 @@ def imageprepare(filename, newfilename):
         newImage.paste(img, (wleft, 4)) #paste resized image on white canvas
     print("Saveing image " + newfilename)
     newImage.save(newfilename)
+
+def get_all_local_data_for_user(user_name):
+    """
+    Get all label image data for a user which categorize based on the label folder
+    and each label folder contains all images for that label image
+    """
+    local_image_folder = get_local_train_folder(user_name)
+    label_img = {}
+    for label in os.listdir(local_image_folder): 
+        if label not in ACCEPTED_LABEL:
+            continue
+        dirname = os.path.join(local_image_folder, label)
+        print("Label name = " + dirname)
+        for file in os.listdir(dirname):
+            _, extension = os.path.splitext(file)
+            if extension not in [".png", ".jpg", "jpeg"]:
+                continue
+            if label not in label_img:
+                label_img[label] = []
+            full_path = os.path.join(get_relative_local_train_folder(user_name), label, file)
+            full_path = os.path.join('/media', full_path)
+            label_img[label].append(full_path)
+    label_img_sorted = collections.OrderedDict(sorted(label_img.items()))
+    return label_img_sorted
+
+"""Converts MNIST data to TFRecords file format with Example protos."""
+import os
+import tensorflow as tf
+
+def _int64_feature(value):
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+
+def _bytes_feature(value):
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+def convert_to(data_set, name, directory):
+    """Converts a dataset to tfrecords."""
+    images = data_set.images
+    labels = data_set.labels
+    num_examples = data_set.num_examples
+
+    print("Images shape:" + str(images.shape))
+    if images.shape[0] != num_examples:
+        raise ValueError('Images size %d does not match label size %d.' %
+                         (images.shape[0], num_examples))
+    rows = images.shape[1]
+    cols = images.shape[2]
+    depth = images.shape[3]
+    print("Rows = " + str(rows))
+    print("Cols = " + str(cols))
+    print("Depth = " + str(depth))
+    filename = os.path.join(directory, name + '.tfrecords')
+    print('Writing', filename)
+    writer = tf.python_io.TFRecordWriter(filename)
+    for index in range(num_examples):
+        image_raw = images[index].tostring()
+        example = tf.train.Example(features=tf.train.Features(feature={
+            'height': _int64_feature(rows),
+            'width': _int64_feature(cols),
+            'depth': _int64_feature(depth),
+            'label': _int64_feature(int(labels[index])),
+            'image_raw': _bytes_feature(image_raw)}))
+        writer.write(example.SerializeToString())
+    writer.close()

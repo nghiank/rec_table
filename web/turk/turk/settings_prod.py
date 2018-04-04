@@ -5,6 +5,7 @@ TMP_DIR='/tmp'
 TENSORFLOW_DIR='/tmp'
 DEBUG_LOG_DIR = '/var/log/app_logs'
 TRAINING_DIR = '/opt/python/current/app/train/checkpoint'
+TRAINING_DATA_BUCKET = "training-data-prod"
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,

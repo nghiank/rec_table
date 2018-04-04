@@ -1,4 +1,13 @@
 $(function() {
+
+setLoading = (isLoading) => {
+    if (isLoading) {
+        $('#loading').show();
+    } else {
+        $('#loading').hide();
+    }
+};
+
 // This function gets cookie with a given name
 function getCookie(name) {
     var cookieValue = null;

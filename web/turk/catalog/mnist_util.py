@@ -3,7 +3,7 @@ import shutil
 from PIL import Image
 from array import *
 from random import shuffle
-from .path_util import get_mnist_data_file_name, get_mnist_label_file_name
+from catalog.path_util import get_mnist_data_file_name, get_mnist_label_file_name
 
 def convert_to_mnist(train_data_folder, test_data_folder, result_folder, accepted_label):
     # Load from and save to
