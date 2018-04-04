@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import uuid
 
+from catalog.tasks import *
 from catalog.emnist import *
 from catalog.constants import *
 from catalog.data_util import *
@@ -56,8 +57,9 @@ def add_training_data(request):
         shutil.rmtree(local_tf_record_folder)
     os.makedirs(local_tf_record_folder)
 
-    convert_to(data_sets['train'], 'train', local_tf_record_folder)
-    convert_to(data_sets['validation'], 'validation', local_tf_record_folder)
-    convert_to(data_sets['test'], 'test', local_tf_record_folder)
+    train_filename = convert_to(data_sets['train'], 'train', local_tf_record_folder)
+    validation_filename = convert_to(data_sets['validation'], 'validation', local_tf_record_folder)
+    test_filename = convert_to(data_sets['test'], 'test', local_tf_record_folder)
 
+    upload_new_training_record(user_name, train_filename, validation_filename, test_filename)
     return Response("Training data is added successfully and uploaded to S3 to be wait for retrain", status=status.HTTP_200_OK)

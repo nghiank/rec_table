@@ -52,3 +52,5 @@ def get_mnist_data_file_name(result_folder, name):
 def get_mnist_label_file_name(result_folder, name):
     return os.path.join(result_folder, name + '-labels-idx1-ubyte')
 
+def get_s3_folder_bucket_training_data(user_name):
+    return os.path.join(settings.TRAINING_DATA_BUCKET, user_name, 'mnist')

@@ -10,7 +10,7 @@ from .mnist_util import convert_to_mnist
 from .models import Cell
 from .models import ImageSheet
 from .models import UserNeuralNet
-from .path_util import get_local_output_folder, get_local_output_cells, get_local_train_folder, get_neural_net_data_folder, get_local_test_folder, get_local_train_folder_for_label 
+from catalog.path_util import *
 from background_task import background
 from django.contrib.auth.models import User
 from django.core.files import File
@@ -146,6 +146,19 @@ def training_local_data(user_name):
     send_log(user_name, 'DONE Save the training-images to MNIST format...')
     
 
+@background(schedule=1)
+def upload_new_training_record(user_name, train_filename, validation_filename, test_filename):
+    #Upload file to S3
+    s3_folder = get_s3_folder_bucket_training_data(user_name)
+    train_s3 = os.path.join(s3_folder, os.path.split(train_filename)[1])
+    validation_s3 = os.path.join(s3_folder, os.path.split(validation_filename)[1])
+    test_s3 = os.path.join(s3_folder, os.path.split(test_filename)[1])
+    upload_file(train_s3, train_filename)
+    print("Uploaded to : " + train_s3)
+    upload_file(validation_s3, validation_filename)
+    print("Uploaded to : " + validation_s3)
+    upload_file(test_s3, test_filename)
+    print("Uploaded to : " + test_s3)
 
     
 

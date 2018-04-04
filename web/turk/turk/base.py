@@ -110,12 +110,12 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 # AWS S3 settings
 AWS_ACCESS_KEY_ID = os.environ.get('aws_key_id')
 AWS_SECRET_ACCESS_KEY = os.environ.get('aws_secret')
-AWS_STORAGE_BUCKET_NAME = 'imagesheet'
+AWS_STORAGE_BUCKET_NAME = 'imagesheet1'
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 AWS_S3_FILE_OVERWRITE = False
-AWS_S3_REGION_NAME = 'ap-southeast-1'
+AWS_S3_REGION_NAME = 'us-west-2'
 
 # Logging 
 LOGGING = {
@@ -145,3 +145,6 @@ CHANNEL_LAYERS = {
         "ROUTING": "catalog.routing.channel_routing",
     },
 }
+
+#Background task
+MAX_ATTEMPTS = 2

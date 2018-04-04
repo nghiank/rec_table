@@ -1,9 +1,11 @@
 import os.path
 import collections
-from .models import ExpectedResult
-from catalog.constants import *
-from catalog.path_util import *
 from PIL import Image, ImageFilter
+from catalog.constants import *
+from catalog.models import ExpectedResult
+from catalog.path_util import *
+from django.core.files import File
+from django.core.files.storage import default_storage
 
 def read_predicted_result(local_output_folder):
     # The result is written in result.txt
@@ -140,3 +142,13 @@ def convert_to(data_set, name, directory):
             'image_raw': _bytes_feature(image_raw)}))
         writer.write(example.SerializeToString())
     writer.close()
+    return filename
+
+def upload_file(s3_file_name, local_file_name):
+    file = default_storage.open(s3_file_name, 'w')
+    with open(local_file_name, 'rb') as f:
+        local_file = File(f)
+        for chunk in local_file.chunks():
+            file.write(chunk)
+    file.close()
+    f.close()
