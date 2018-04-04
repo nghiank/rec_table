@@ -1,13 +1,34 @@
 
 $(function() {
-    // When we're using HTTPS, use WSS too.
-    var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-    var chatsock = new ReconnectingWebSocket(ws_scheme + '://' + window.location.host + "/train" + window.location.pathname);
-    chatsock.onmessage = function(message) {
-        var data = JSON.parse(message.data);
-        console.log('Message:' + data.log);
-        var elem = document.createElement("p");
-        elem.innerHTML = data.log;
-        $('#train').append(elem);
+    setLoading = (isLoading) => {
+        if (isLoading) {
+            $('#loading').show();
+        } else {
+            $('#loading').hide();
+        }
     };
+
+    $(".close").click(function(){
+        var img_id = $(this).attr('img-id');
+        var parent = $(this).parent();
+        var action = $(this).attr('action');
+        console.log('Action:' + action)
+        setLoading(true);
+        $.ajax({
+            url: action,
+            type: 'POST',
+            async: true,
+            success: function (data) {
+                parent.hide();
+                setLoading(false);
+            },
+            error: function() {
+                setLoading(false);
+                alert("Not able to delete this image - Internal error");
+            },
+            cache: false,
+            contentType: false,
+            processData: false
+        });
+    });
 });

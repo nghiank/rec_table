@@ -1,5 +1,6 @@
 import os.path
 from django.conf import settings
+from catalog.constants import *
 
 # Get local output folder of the image file.
 def get_local_output_folder(user_name, id):
@@ -10,15 +11,22 @@ def get_local_output_folder(user_name, id):
 def get_local_output_cells(user_name, id):
     return os.path.join(get_local_output_folder(user_name, id) , 'cells')
 
+# Get the relative local train folder
+def get_relative_local_train_folder(user_name):
+    return os.path.join(user_name, 'training-images')
+
 # Get the local train folder that contains all label
 def get_local_train_folder(user_name):
-    return os.path.join(settings.TMP_DIR, user_name, 'training-images')
+    return os.path.join(settings.TMP_DIR, get_relative_local_train_folder(user_name))
 
 # Get the local train images folder for a label
 # where there are multiple label folders which contain the handwritten images of 
 # the user.
 def get_local_train_folder_for_label(user_name, label):
     return os.path.join(settings.TMP_DIR, user_name, 'training-images', str(label))
+
+def get_local_new_train_data(user_name, label, id, file_order):
+    return os.path.join(get_local_train_folder_for_label(user_name, label), str(id) + '_' + str(file_order) + FILE_EXT)
 
 # Get the local test images folder
 # where there are multiple label folders which contain the handwritten images of 

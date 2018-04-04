@@ -105,3 +105,35 @@ body {
   content: attr(placeholder);
   display: block; /* For Firefox */
 }
+
+.label-header {
+  font-size: 40px;
+}
+
+.section-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.img-wrap.visible {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  float: left;
+  transition: visibility 0s linear 0.7s, opacity 0.7s ease-in-out;
+}
+
+.img-wrap.hidden {
+  opacity: 0; 
+  visibility:hidden;
+}
+
+.img-wrap .close {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 100;
+  color: red;
+}

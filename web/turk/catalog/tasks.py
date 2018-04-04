@@ -23,7 +23,6 @@ from django.conf import settings
 from PIL import Image, ImageFilter
 
 
-FILE_EXT = '.png'
 attr = ['num', 'big', 'small', 'roll', 'del']
 max_length = [
     4, # 'num': 4,
@@ -32,34 +31,12 @@ max_length = [
     1, # 'roll' : 1,
     1, # 'del' : 1
 ]
-start_index = [1] # We do not care about the first column(order column).
-for i in range(0, len(max_length)):
-    start_index.append(max_length[i] + start_index[i])
-num_col = sum(max_length) + 1
 
-def extract_character(value, index):
-    if len(value) <= index or value[index] == ' ':
-        return None
-    return value[index]
-
-def get_full(v, max_len):
-    while len(v) < max_len:
-        v = ' ' + v
-    return v
-
-def get_file_name(row, col, sub_col, folder):
-    if row < (NROW // 2):
-        result = (2*num_col) * (row + 1) + start_index[col] + sub_col
-    else:
-        result = (2*num_col) * (row - 29) + num_col + start_index[col] + sub_col
-    return (os.path.join(folder, 'file' + str(result) + FILE_EXT), result)
     
 def get_s3_folder_cells(user_name, id, file_order):
     return os.path.join(user_name, 'cells', str(id), str(file_order) + FILE_EXT)
 
 
-def get_local_new_train_data(user_name, label, id, file_order):
-    return os.path.join(get_local_train_folder_for_label(user_name, label), str(id) + '_' + str(file_order) + FILE_EXT)
 
 def write_cell_data(s3_file_name, v, item):
     cell = Cell.objects.update_or_create(
@@ -76,35 +53,6 @@ def upload_file(s3_file_name, local_file_name):
     file.close()
     f.close()
 
-def imageprepare(filename, newfilename):
-    """
-    This function returns the pixel values.
-    The imput is a png file location.
-    """
-    im = Image.open(filename).convert('L')
-    width = float(im.size[0])
-    height = float(im.size[1])
-    newImage = Image.new('L', (28, 28), (0)) #creates white canvas of 28x28 pixels
-    if width > height: #check which dimension is bigger
-        #Width is bigger. Width becomes 20 pixels.
-        nheight = int(round((20.0/width*height),0)) #resize height according to ratio width
-        if (nheight == 0): #rare case but minimum is 1 pixel
-            nheight = 1
-        # resize and sharpen
-        img = im.resize((20,nheight), Image.ANTIALIAS).filter(ImageFilter.SHARPEN)
-        wtop = int(round(((28 - nheight)/2),0)) #caculate horizontal pozition
-        newImage.paste(img, (4, wtop)) #paste resized image on white canvas
-    else:
-        #Height is bigger. Heigth becomes 20 pixels. 
-        nwidth = int(round((20.0/height*width),0)) #resize width according to ratio height
-        if (nwidth == 0): #rare case but minimum is 1 pixel
-            nwidth = 1
-         # resize and sharpen
-        img = im.resize((nwidth,20), Image.ANTIALIAS).filter(ImageFilter.SHARPEN)
-        wleft = int(round(((28 - nwidth)/2),0)) #caculate vertical pozition
-        newImage.paste(img, (wleft, 4)) #paste resized image on white canvas
-    print("Saveing image " + newfilename)
-    newImage.save(newfilename)
 
 @background(schedule=60)
 def upload_prediction_images(user_name, id):

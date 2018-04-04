@@ -26,11 +26,11 @@ def convert_to_mnist(train_data_folder, test_data_folder, result_folder, accepte
         print("FileList:" + str(FileList))
         for filename in FileList:
             label = ord(os.path.split(os.path.dirname(filename))[1]) - ord('0')
-            print("Current label:" + str(label), ' filename='+filename)
+            #print("Current label:" + str(label), ' filename='+filename)
             Im = Image.open(filename)
             pixel = Im.load()
             width, height = Im.size
-            print("Width=" + str(width) + " ,height=" + str(height))
+            #print("Width=" + str(width) + " ,height=" + str(height))
             for x in range(0,width):
                 for y in range(0,height):
                     #print("y=" + str(y) + " ,x="+str(x))
@@ -57,7 +57,7 @@ def convert_to_mnist(train_data_folder, test_data_folder, result_folder, accepte
         data_image = header + data_image
 
         #output_file = open(name[1]+'-images-idx3-ubyte', 'wb')
-        print("SAve output")
+        print("Save output")
         output_file = open(get_mnist_data_file_name(result_folder, name[1]), 'wb')
         data_image.tofile(output_file)
         output_file.close()

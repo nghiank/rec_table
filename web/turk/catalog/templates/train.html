@@ -3,7 +3,22 @@
 {% load static %}
 <div class="jumbotron">
     <div class="container">
-    <h1 class="display-5" id="train-title">Training...</h1>
-    <div id="train"></div>
+    <h1 class="display-5" id="train-title">Filter Images</h1>
+    <div id="train">
+        {% for key, values in label_img.items %}
+            <p class='label-header'>{{key}}</p>
+            <div class='section-wrap'>
+                {% for file in values %}
+                    <div class="img-wrap visible">
+                        <span class="close" img-id={{file}} action="{% url 'remove_image' id=file %}" >&times;</span>
+                        <img class='img-predicted' height="56" width="56" src={{file}}>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+    <div>
+        <button class="btn btn-primary btn-lg verify-btn" type="submit">Add To Training Data</button>
+    </div>
 </div>
 {% endblock %}

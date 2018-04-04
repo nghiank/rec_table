@@ -13,14 +13,15 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url
-from django.contrib import admin
-from django.conf.urls import include
-from django.views.generic import RedirectView
-from django.conf import settings
-from django.conf.urls.static import static
-from rest_framework import routers
 from catalog import views
+from django.conf import settings
+from django.conf.urls import include
+from django.conf.urls import url
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.views.generic import RedirectView
+from django.views.static import serve
+from rest_framework import routers
 
 router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
@@ -55,4 +56,10 @@ urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += [
     url(r'^', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+]
+
+urlpatterns += [
+    url(r'^media/(?P<path>.*)$', serve, {
+        'document_root': settings.TMP_DIR,
+    }),
 ]
