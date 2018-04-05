@@ -48,13 +48,12 @@ def extract_images(f):
       raise ValueError('Invalid magic number %d in MNIST image file: %s' %
                        (magic, f.name))
     num_images = _read32(bytestream)
-    print("Numer of images:" + str(num_images))
     rows = _read32(bytestream)
     cols = _read32(bytestream)
-    print("Number of rows and cols: " + str(rows) + ", " + str(cols))
     buf = bytestream.read(rows * cols * num_images)
     data = numpy.frombuffer(buf, dtype=numpy.uint8)
     data = data.reshape(num_images, rows, cols, 1)
+    #print("Number of bytes = "  + str(len(data.tostring())) + " num_images=" + str(num_images))
     return data
 
 
@@ -90,21 +89,23 @@ def extract_labels(f, one_hot=False, num_classes=62):
       return dense_to_one_hot(labels, num_classes)
     return labels
 
-def filter_subset(images, labels, subset):
+def filter_subset(images, labels, subset, dtype):
     """Filter data only limited to subset"""
-    print('Only retain label:', subset)
     cnt = 0
-    print("Value of labels:" + str(labels.shape))
     for i in xrange(labels.shape[0]):
         if labels[i] in subset:
             cnt = cnt + 1
-    new_images = numpy.zeros((cnt, images.shape[1], images.shape[2], images.shape[3]))
-    new_labels = numpy.zeros(cnt)
+    nptype = numpy.uint8
+    if dtypes is dtypes.float32:
+      nptype = numpy.float32 
+    print("Debug = " + str(nptype))
+    new_images = numpy.zeros((cnt, images.shape[1], images.shape[2], images.shape[3]), dtype=nptype)
+    new_labels = numpy.zeros(cnt, dtype=nptype)
     cnt = 0
     for i in xrange(labels.shape[0]):
         if labels[i] in subset:
             new_labels[cnt] = labels[i]
-            new_images[cnt] = numpy.rot90(numpy.flip(images[i], 0),3)
+            new_images[cnt] = images[i]
             cnt = cnt + 1 
     return new_images, new_labels
 
@@ -135,30 +136,24 @@ class DataSet(object):
     if dtype not in (dtypes.uint8, dtypes.float32):
       raise TypeError('Invalid image dtype %r, expected uint8 or float32' %
                       dtype)
-    if fake_data:
-      self._num_examples = 10000
-      self.one_hot = one_hot
-    else:
-      assert images.shape[0] == labels.shape[0], (
-          'images.shape: %s labels.shape: %s' % (images.shape, labels.shape))
-      self._num_examples = images.shape[0]
-      print("number of examples:" + str(self._num_examples))
+    assert images.shape[0] == labels.shape[0], (
+        'images.shape: %s labels.shape: %s' % (images.shape, labels.shape))
+    self._num_examples = images.shape[0]
 
-      # Convert shape from [num examples, rows, columns, depth]
-      # to [num examples, rows*columns] (assuming depth == 1)
-      if reshape:
-        print("It is going to reshape!!!")
-        assert images.shape[3] == 1
-        images = images.reshape(images.shape[0],
-                                images.shape[1] * images.shape[2])
-      if dtype == dtypes.float32:
-        # Convert from [0, 255] -> [0.0, 1.0].
-        images = images.astype(numpy.float32)
-        images = numpy.multiply(images, 1.0 / 255.0)
-    self._images = images
+    # Convert shape from [num examples, rows, columns, depth]
+    # to [num examples, rows*columns] (assuming depth == 1)
+    if reshape:
+      assert images.shape[3] == 1
+      images = images.reshape(images.shape[0],
+                              images.shape[1] * images.shape[2])
+    if dtype == dtypes.float32:
+      # Convert from [0, 255] -> [0.0, 1.0].
+      images = images.astype(numpy.float32)
+      images = numpy.multiply(images, 1.0 / 255.0)
+    self._images = images 
     self._labels = labels
-    self._epochs_completed = 0
-    self._index_in_epoch = 0
+    self._epochs_completed = 0 
+    self._index_in_epoch = 0 
 
   @property
   def images(self):
@@ -250,8 +245,6 @@ def read_data_sets(train_dir,
   with open(local_file, 'rb') as f:
     test_labels = extract_labels(f, one_hot=one_hot)
 
-  print("Validation size=" + str(validation_size))
-  print("len(train_images)=" + str(len(train_images)))
   if not 0 <= validation_size <= len(train_images):
     raise ValueError(
         'Validation size should be between 0 and {}. Received: {}.'
@@ -262,9 +255,13 @@ def read_data_sets(train_dir,
   train_images = train_images[validation_size:]
   train_labels = train_labels[validation_size:]
 
-  train_images, train_labels = filter_subset(train_images, train_labels, subset)
-  validation_images,validation_labels = filter_subset(validation_images, validation_labels, subset)
-  test_images, test_labels = filter_subset(test_images, test_labels, subset)
+  print("Number of bytes found = "  + str(len(train_images.tostring())) + " num_images=" + str(train_images.shape[0]))
+
+  train_images, train_labels = filter_subset(train_images, train_labels, subset, dtype)
+  validation_images,validation_labels = filter_subset(validation_images, validation_labels, subset, dtype)
+  test_images, test_labels = filter_subset(test_images, test_labels, subset, dtype)
+
+  print("Number of bytes found  after filter= "  + str(len(train_images.tostring())) + " num_images=" + str(train_images.shape[0]))
 
   train_labels = remapping(train_labels, subset)
   validation_labels = remapping(validation_labels, subset)

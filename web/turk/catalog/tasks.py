@@ -159,6 +159,7 @@ def upload_new_training_record(user_name, train_filename, validation_filename, t
     print("Uploaded to : " + validation_s3)
     upload_file(test_s3, test_filename)
     print("Uploaded to : " + test_s3)
+    print("Done one task")
 
     
 

@@ -1,5 +1,6 @@
 import os
 import shutil
+import numpy as np
 from PIL import Image
 from array import *
 from random import shuffle
@@ -11,6 +12,7 @@ def convert_to_mnist(train_data_folder, test_data_folder, result_folder, accepte
     if os.path.exists(result_folder): 
         shutil.rmtree(result_folder)
     os.makedirs(result_folder)
+    cnt = 0
     for name in Names:
         data_image = array('B')
         data_label = array('B')
@@ -23,19 +25,24 @@ def convert_to_mnist(train_data_folder, test_data_folder, result_folder, accepte
                 if filename.endswith(".png"):
                     FileList.append(os.path.join(name[0],dirname,filename))
         shuffle(FileList) # Usefull for further segmenting the validation set
-        print("FileList:" + str(FileList))
+        #print("FileList:" + str(FileList))
         for filename in FileList:
             label = ord(os.path.split(os.path.dirname(filename))[1]) - ord('0')
             #print("Current label:" + str(label), ' filename='+filename)
             Im = Image.open(filename)
             pixel = Im.load()
             width, height = Im.size
-            #print("Width=" + str(width) + " ,height=" + str(height))
+            #if cnt < 10:
+            #    print("Width=" + str(width) + " ,height=" + str(height) + " pixel=" + str(pixel[10,10]))
+            #    cnt = cnt + 1
             for x in range(0,width):
                 for y in range(0,height):
                     #print("y=" + str(y) + " ,x="+str(x))
-                    data_image.append(pixel[x,y])
-            data_label.append(label) # labels start (one unsigned byte each)
+                    data_image.append(np.uint8(pixel[x,y]))
+            #if cnt < 10:
+            #    tt = data_image.tostring()
+            #    print("Len of data_image:" + str(len(tt)))
+            data_label.append(np.uint8(label)) # labels start (one unsigned byte each)
         hexval = "{0:#0{1}x}".format(len(FileList),6) # number of files in HEX
 
         # header for label array

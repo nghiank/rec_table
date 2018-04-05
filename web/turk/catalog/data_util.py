@@ -6,6 +6,7 @@ from catalog.models import ExpectedResult
 from catalog.path_util import *
 from django.core.files import File
 from django.core.files.storage import default_storage
+import sys
 
 def read_predicted_result(local_output_folder):
     # The result is written in result.txt
@@ -75,7 +76,7 @@ def imageprepare(filename, newfilename):
         img = im.resize((nwidth,20), Image.ANTIALIAS).filter(ImageFilter.SHARPEN)
         wleft = int(round(((28 - nwidth)/2),0)) #caculate vertical pozition
         newImage.paste(img, (wleft, 4)) #paste resized image on white canvas
-    print("Saveing image " + newfilename)
+    print("Saving image " + newfilename)
     newImage.save(newfilename)
 
 def get_all_local_data_for_user(user_name):
@@ -119,7 +120,7 @@ def convert_to(data_set, name, directory):
     labels = data_set.labels
     num_examples = data_set.num_examples
 
-    print("Images shape:" + str(images.shape))
+    print("Images shape:" + str(images.shape) + " num_examples:" + str(num_examples))
     if images.shape[0] != num_examples:
         raise ValueError('Images size %d does not match label size %d.' %
                          (images.shape[0], num_examples))
@@ -132,8 +133,14 @@ def convert_to(data_set, name, directory):
     filename = os.path.join(directory, name + '.tfrecords')
     print('Writing', filename)
     writer = tf.python_io.TFRecordWriter(filename)
+    cnt = 0
     for index in range(num_examples):
         image_raw = images[index].tostring()
+        if cnt < 10:
+            print("Image raw leng=" + str(len(image_raw)))
+            p = images[index][0][0][0]
+            print("Raw = " + str(sys.getsizeof(p)) + " val=" + str(p))
+            cnt = cnt + 1
         example = tf.train.Example(features=tf.train.Features(feature={
             'height': _int64_feature(rows),
             'width': _int64_feature(cols),

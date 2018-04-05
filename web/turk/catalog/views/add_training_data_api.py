@@ -50,7 +50,7 @@ def add_training_data(request):
 
     # Convert MNIST Format to TFRecord
     subset = [0,1,2,3,4,5,6,7,8,9]
-    data_sets = read_data_sets(result_folder, subset = subset)
+    data_sets = read_data_sets(result_folder, dtype=dtypes.uint8, subset = subset)
 
     local_tf_record_folder = get_local_tf_record_folder(user_name)
     if os.path.exists(local_tf_record_folder): 
