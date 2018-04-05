@@ -98,14 +98,14 @@ def filter_subset(images, labels, subset, dtype):
     nptype = numpy.uint8
     if dtypes is dtypes.float32:
       nptype = numpy.float32 
-    print("Debug = " + str(nptype))
     new_images = numpy.zeros((cnt, images.shape[1], images.shape[2], images.shape[3]), dtype=nptype)
     new_labels = numpy.zeros(cnt, dtype=nptype)
     cnt = 0
     for i in xrange(labels.shape[0]):
         if labels[i] in subset:
             new_labels[cnt] = labels[i]
-            new_images[cnt] = images[i]
+            # Image is flipped
+            new_images[cnt] = numpy.rot90(numpy.flip(images[i], 0),3)
             cnt = cnt + 1 
     return new_images, new_labels
 
