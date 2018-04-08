@@ -5,7 +5,27 @@ from PIL import Image
 from array import *
 from random import shuffle
 from catalog.path_util import get_mnist_data_file_name, get_mnist_label_file_name
+from catalog.data_util import *
 
+def download_default_emnist():
+    s3_folder = "common/emnist"
+    s3_file_names = [
+        "emnist-byclass-mapping.txt",
+        "emnist-byclass-test-images-idx3-ubyte.gz",
+        "emnist-byclass-test-labels-idx1-ubyte.gz",
+        "emnist-byclass-train-images-idx3-ubyte.gz",
+        "emnist-byclass-train-labels-idx1-ubyte.gz"
+    ]
+    local_folder = get_emnist_cache_folder()
+    if not os.path.exists(local_folder):
+        os.makedirs(local_folder)
+    for filename in s3_file_names:
+        s3_filename = os.path.join(s3_folder, filename)
+        local_filename = os.path.join(local_folder, filename)
+        if os.path.exists(local_filename):
+            continue
+        write_file(s3_filename, local_filename)
+    
 def convert_to_mnist(train_data_folder, test_data_folder, result_folder, accepted_label):
     # Load from and save to
     Names = [[train_data_folder,'train'], [test_data_folder,'test']]

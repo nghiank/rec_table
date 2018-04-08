@@ -5,5 +5,6 @@ if [ ! -d  $TENSORFLOW_PATH ]; then
 fi
 virtualenv --system-site-packages -p python3 $TENSORFLOW_PATH 
 source $TENSORFLOW_PATH/bin/activate
+pip install --upgrade pip
 pip3 install --upgrade tensorflow
 pip3 install Pillow

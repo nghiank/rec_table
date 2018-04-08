@@ -159,3 +159,12 @@ def upload_file(s3_file_name, local_file_name):
             file.write(chunk)
     file.close()
     f.close()
+
+def write_file(s3_file_name, local_file_name):
+    file = default_storage.open(s3_file_name, 'r')
+    with open(local_file_name, 'wb') as f:
+        local_file = File(f)
+        for chunk in file.chunks():
+            local_file.write(chunk)
+    file.close()
+    f.close()

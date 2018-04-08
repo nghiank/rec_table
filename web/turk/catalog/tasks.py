@@ -1,8 +1,10 @@
-import os
-import shutil
+import boto3
 import json
-
-from shutil import copyfile
+import os
+import sagemaker
+import shutil
+import sys
+import time
 
 from .constants import NROW
 from .data_util import read_expected_result
@@ -10,17 +12,22 @@ from .mnist_util import convert_to_mnist
 from .models import Cell
 from .models import ImageSheet
 from .models import UserNeuralNet
-from catalog.path_util import *
+from .sagemaker_util import *
+from PIL import Image, ImageFilter
 from background_task import background
+from catalog.path_util import *
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files import File
 from django.core.files.storage import default_storage
+from django.db import IntegrityError
 from django.db import transaction
 from pathlib import Path
-from django.db import IntegrityError
-from django.conf import settings
-#from channels import Group
-from PIL import Image, ImageFilter
+from sagemaker import Session
+from sagemaker.tensorflow import TensorFlow
+from sagemaker.utils import name_from_image
+from shutil import copyfile
+from time import gmtime, strftime
 
 
 attr = ['num', 'big', 'small', 'roll', 'del']
@@ -52,7 +59,6 @@ def upload_file(s3_file_name, local_file_name):
             file.write(chunk)
     file.close()
     f.close()
-
 
 @background(schedule=60)
 def upload_prediction_images(user_name, id):
@@ -145,28 +151,96 @@ def training_local_data(user_name):
     send_log(user_name, 'Save the training-images to MNIST format...')
     send_log(user_name, 'DONE Save the training-images to MNIST format...')
     
+def train_data(
+    inputs, role, job_name, instance_type='ml.c4.xlarge', instance_count=1, 
+    training_steps=20000, evaluation_steps=5000, 
+    debug=False, debug_job_name='nghia-2018-04-06-1'):
+    mnist_estimator = TensorFlow(#entry_point='/home/0ec2-user/sample-notebooks/sagemaker-python-sdk/tensorflow_distributed_mnist/mnist.py',
+                                entry_point='/Users/nghia/rec_table/web/turk/catalog/mnist_sagemaker.py',
+                                role=role,
+                                training_steps=training_steps, 
+                                evaluation_steps=evaluation_steps,
+                                train_instance_count=instance_count,
+                                train_instance_type=instance_type)
+    try:
+        if debug:
+            print("Trying to attached job_name=" + debug_job_name)
+            mnist_estimator = TensorFlow.attach(debug_job_name)
+        else:
+            print("Trying to create job_name=" + job_name)
+            mnist_estimator.fit(inputs, wait = True, job_name=job_name)
+    except:
+        print("Unexpected error:", sys.exc_info())
+        return None
+    return mnist_estimator
 
-@background(schedule=1)
+def create_model(mnist_estimator, instance_type='ml.c4.xlarge'):
+    model = mnist_estimator.create_model()
+    container_def = model.prepare_container_def(instance_type)
+    model_name = name_from_image(container_def['Image'])
+    print("Getting model name=" + model_name)
+    model.sagemaker_session.create_model(model_name, mnist_estimator.role, container_def)
+    return model, model_name
+
+def update_endpoint(model, user_name, production_variant):
+    endpoint_name = user_name + "-ep-2"
+    client = model.sagemaker_session.sagemaker_client
+    response = client.describe_endpoint(EndpointName=endpoint_name)
+    print("Response describe_endpoint = " + str(response))
+    timestamp = time.strftime('%Y-%m-%d-%H-%M-%S', time.gmtime())
+    endpoint_config_name = user_name + '-endpoint-config-name-' +  timestamp
+    if 'EndpointArn' in response:
+        #Update existing endpoint
+        print('Update existing endpoint ' + endpoint_name + ' with product_variant:' + str(production_variant))
+        response = client.create_endpoint_config(
+            EndpointConfigName=endpoint_config_name, ProductionVariants=[production_variant])
+        print("Create new endpoint config response=" + str(response))
+        update_endpoint_response = client.update_endpoint(EndpointName=endpoint_name, EndpointConfigName=endpoint_config_name)
+        print("Update endpoint response = " + str(update_endpoint_response))
+    else:  
+        #Create new endpoint
+        print('Create new endpoint '+ endpoint_name + ' with product_variant:' + str(production_variant))
+        model.sagemaker_session.endpoint_from_production_variants(endpoint_name, [production_variant], wait=False)
+
+#@background(schedule=1)
 def upload_new_training_record(user_name, train_filename, validation_filename, test_filename):
     #Upload file to S3
     s3_folder = get_s3_folder_bucket_training_data(user_name)
     train_s3 = os.path.join(s3_folder, os.path.split(train_filename)[1])
     validation_s3 = os.path.join(s3_folder, os.path.split(validation_filename)[1])
     test_s3 = os.path.join(s3_folder, os.path.split(test_filename)[1])
-    upload_file(train_s3, train_filename)
-    print("Uploaded to : " + train_s3)
-    upload_file(validation_s3, validation_filename)
-    print("Uploaded to : " + validation_s3)
-    upload_file(test_s3, test_filename)
-    print("Uploaded to : " + test_s3)
-    print("Done one task")
+    if False:
+        upload_file(train_s3, train_filename)
+        print("Uploaded to : " + train_s3)
+        upload_file(validation_s3, validation_filename)
+        print("Uploaded to : " + validation_s3)
+        upload_file(test_s3, test_filename)
+        print("Uploaded to : " + test_s3)
 
-    
+    # Setup settings
+    print("Start training now for user_name=" + user_name)
+    inputs = get_input_training_s3(user_name) 
+    print("Train data inputs=" + inputs)
+    instance_type =  settings.SAGEMAKER_INSTANCE_TYPE
+    initial_instance_count = settings.SAGEMAKER_INITIAL_INSTANCE_COUNT
+    role = settings.SAGEMAKER_ROLE
+    print("Role = " + role)
+    job_name = get_job_name(user_name)
+    print("Job name =" + job_name)
 
-        
+    # Train Data
+    mnist_estimator = train_data(
+        inputs, role, job_name, instance_type = instance_type, training_steps=300, evaluation_steps=10)
+    print("Done with fit for job_name=" + job_name)
+    if not mnist_estimator:
+        print("Error when executing fit on training data")
+        return
 
+    # Create model
+    model, model_name = create_model(mnist_estimator, instance_type=instance_type)
+    print("Created model name = " + model_name)
 
-    
-
-    
-    
+    # Update endpoint
+    production_variant = sagemaker.production_variant(model_name, instance_type, initial_instance_count)
+    update_endpoint(model, user_name, production_variant)
+    print("Done with updating endpoint for user_name:" + user_name)

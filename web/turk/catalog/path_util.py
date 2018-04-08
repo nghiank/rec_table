@@ -2,6 +2,11 @@ import os.path
 from django.conf import settings
 from catalog.constants import *
 
+
+# Get common emnist data
+def get_emnist_cache_folder():
+    return os.path.join(settings.TMP_DIR, 'emnist')
+
 # Get local output folder of the image file.
 def get_local_output_folder(user_name, id):
     return os.path.join(settings.TMP_DIR, user_name, id)

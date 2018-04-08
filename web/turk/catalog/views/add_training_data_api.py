@@ -48,8 +48,13 @@ def add_training_data(request):
     result_folder = get_mnist_local_folder(user_name)
     convert_to_mnist(training_image_dir, test_image_dir, result_folder, ACCEPTED_LABEL) 
 
+    # Download default emnist
+    download_default_emnist()
+
+    return
+
     # Convert MNIST Format to TFRecord
-    subset = [0,1,2,3,4,5,6,7,8,9]
+    subset = [2,3,6,7,9]
     data_sets = read_data_sets(result_folder, dtype=dtypes.uint8, subset = subset)
 
     local_tf_record_folder = get_local_tf_record_folder(user_name)

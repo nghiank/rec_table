@@ -1,11 +1,19 @@
 import os
 from .base import *
 from os.path import expanduser
+
+# Training settings
 TMP_DIR='/tmp'
 TENSORFLOW_DIR='/tmp'
 DEBUG_LOG_DIR = '/var/log/app_logs'
 TRAINING_DIR = '/opt/python/current/app/train/checkpoint'
 TRAINING_DATA_BUCKET = "training-data-prod"
+
+# Sagemaker settings
+SAGEMAKER_INITIAL_INSTANCE_COUNT = 2
+SAGEMAKER_ROLE = 'arn:aws:iam::497017843977:role/service-role/AmazonSageMaker-ExecutionRole-20180322T225994'
+SAGEMAKER_INSTANCE_TYPE = 'ml.c4.xlarge'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
