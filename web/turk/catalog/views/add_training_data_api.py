@@ -39,32 +39,7 @@ def add_training_data(request):
     """
     if request.method != 'POST':
         return Response("Error", status=status.HTTP_404_NOT_FOUND)
-    print("Add Training Data")
-
     # Convert local data folder to MNIST format
     user_name = request.user.get_username()
-    training_image_dir = get_local_train_folder(user_name)
-    test_image_dir = training_image_dir
-    result_folder = get_mnist_local_folder(user_name)
-    convert_to_mnist(training_image_dir, test_image_dir, result_folder, ACCEPTED_LABEL) 
-
-    # Download default emnist
-    download_default_emnist()
-
-    return
-
-    # Convert MNIST Format to TFRecord
-    subset = [2,3,6,7,9]
-    data_sets = read_data_sets(result_folder, dtype=dtypes.uint8, subset = subset)
-
-    local_tf_record_folder = get_local_tf_record_folder(user_name)
-    if os.path.exists(local_tf_record_folder): 
-        shutil.rmtree(local_tf_record_folder)
-    os.makedirs(local_tf_record_folder)
-
-    train_filename = convert_to(data_sets['train'], 'train', local_tf_record_folder)
-    validation_filename = convert_to(data_sets['validation'], 'validation', local_tf_record_folder)
-    test_filename = convert_to(data_sets['test'], 'test', local_tf_record_folder)
-
-    upload_new_training_record(user_name, train_filename, validation_filename, test_filename)
-    return Response("Training data is added successfully and uploaded to S3 to be wait for retrain", status=status.HTTP_200_OK)
+    upload_new_training_record(user_name)
+    return Response("Training data task is created successfully and when the task start, it will start to train the neural network", status=status.HTTP_200_OK)

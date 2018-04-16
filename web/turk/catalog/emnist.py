@@ -113,47 +113,54 @@ def remapping(label, subset):
     """Remapping label to the item index found in subset"""
     return numpy.searchsorted(subset, label)
     
-class DataSet(object):
+def balance_data(images, labels, num_labels):
+  """
+  Balance data by making each label has same length with the smallest size.
+  """
+  print("Balance the data")
+  cnt = [0] * num_labels
+  n = labels.shape[0]
+  for i in range(n):
+    cnt[labels[i]] = cnt[labels[i]] + 1
+  mmin = min(cnt)
+  print("cnt=", cnt, " mmin=", mmin)
+  total = mmin * num_labels
+  bal = [mmin] * num_labels
+  new_images = numpy.zeros((total, images.shape[1], images.shape[2], images.shape[3]), dtype=numpy.uint8)
+  new_labels = numpy.zeros(total, dtype=numpy.uint8)
+  j = 0
+  for i in range(n):
+    label = labels[i]
+    if bal[label] > 0:
+      bal[label] = bal[label] - 1
+      new_images[j] = images[i]
+      new_labels[j] = label
+      j = j + 1
+  print("new_images.shape", new_images.shape)
+  print("new_labels.shape", new_labels.shape)
+  # Shuffle the data
+  perm = numpy.arange(j)
+  numpy.random.shuffle(perm)
+  res_images = new_images[perm]
+  res_labels = new_labels[perm]
+  return res_images, res_labels
 
+class DataSet(object):
   def __init__(self,
                images,
-               labels,
-               subset = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-               fake_data=False,
-               one_hot=False,
-               dtype=dtypes.float32,
-               reshape=False,
-               seed=None):
-    """Construct a DataSet.
-    one_hot arg is used only if fake_data is true.  `dtype` can be either
-    `uint8` to leave the input as `[0, 255]`, or `float32` to rescale into
-    `[0, 1]`.  Seed arg provides for convenient deterministic testing.
+               labels):
     """
-    seed1, seed2 = random_seed.get_seed(seed)
-    # If op level seed is not set, use whatever graph level seed is returned
-    numpy.random.seed(seed1 if seed is None else seed2)
-    dtype = dtypes.as_dtype(dtype).base_dtype
-    if dtype not in (dtypes.uint8, dtypes.float32):
-      raise TypeError('Invalid image dtype %r, expected uint8 or float32' %
-                      dtype)
+    Construct a DataSet.
+    """
     assert images.shape[0] == labels.shape[0], (
         'images.shape: %s labels.shape: %s' % (images.shape, labels.shape))
     self._num_examples = images.shape[0]
 
-    # Convert shape from [num examples, rows, columns, depth]
-    # to [num examples, rows*columns] (assuming depth == 1)
-    if reshape:
-      assert images.shape[3] == 1
-      images = images.reshape(images.shape[0],
-                              images.shape[1] * images.shape[2])
-    if dtype == dtypes.float32:
-      # Convert from [0, 255] -> [0.0, 1.0].
-      images = images.astype(numpy.float32)
-      images = numpy.multiply(images, 1.0 / 255.0)
-    self._images = images 
-    self._labels = labels
-    self._epochs_completed = 0 
-    self._index_in_epoch = 0 
+    # Shuffle the data
+    perm = numpy.arange(self._num_examples)
+    numpy.random.shuffle(perm)
+    self._images = images[perm]
+    self._labels = labels[perm]
 
   @property
   def images(self):
@@ -167,53 +174,16 @@ class DataSet(object):
   def num_examples(self):
     return self._num_examples
 
-  @property
-  def epochs_completed(self):
-    return self._epochs_completed
 
-  def next_batch(self, batch_size, fake_data=False, shuffle=True):
-    """Return the next `batch_size` examples from this data set."""
-    if fake_data:
-      fake_image = [1] * 784
-      if self.one_hot:
-        fake_label = [1] + [0] * 9
-      else:
-        fake_label = 0
-      return [fake_image for _ in xrange(batch_size)], [
-          fake_label for _ in xrange(batch_size)
-      ]
-    start = self._index_in_epoch
-    # Shuffle for the first epoch
-    if self._epochs_completed == 0 and start == 0 and shuffle:
-      perm0 = numpy.arange(self._num_examples)
-      numpy.random.shuffle(perm0)
-      self._images = self.images[perm0]
-      self._labels = self.labels[perm0]
-    # Go to the next epoch
-    if start + batch_size > self._num_examples:
-      # Finished epoch
-      self._epochs_completed += 1
-      # Get the rest examples in this epoch
-      rest_num_examples = self._num_examples - start
-      images_rest_part = self._images[start:self._num_examples]
-      labels_rest_part = self._labels[start:self._num_examples]
-      # Shuffle the data
-      if shuffle:
-        perm = numpy.arange(self._num_examples)
-        numpy.random.shuffle(perm)
-        self._images = self.images[perm]
-        self._labels = self.labels[perm]
-      # Start next epoch
-      start = 0
-      self._index_in_epoch = batch_size - rest_num_examples
-      end = self._index_in_epoch
-      images_new_part = self._images[start:end]
-      labels_new_part = self._labels[start:end]
-      return numpy.concatenate((images_rest_part, images_new_part), axis=0) , numpy.concatenate((labels_rest_part, labels_new_part), axis=0)
-    else:
-      self._index_in_epoch += batch_size
-      end = self._index_in_epoch
-      return self._images[start:end], self._labels[start:end]
+# Merge two DataSet
+def merge_data_set(data_set1, data_set2):
+  assert data_set1.images.shape[1:] == data_set2.images.shape[1:], (
+    'data_set1.shape: %s , data_set2: %s' % (data_set1.images.shape[1:], data_set2.images.shape[1:]))
+  assert data_set1.labels.shape[1:] == data_set2.labels.shape[1:], (
+    'data_set1.shape: %s , data_set2: %s' % (data_set1.labels.shape, data_set2.labels.shape))
+  merged_images = numpy.concatenate((data_set1.images, data_set2.images), axis=0)
+  merged_labels = numpy.concatenate((data_set1.labels, data_set2.labels), axis=0)
+  return DataSet(merged_images, merged_labels)
 
 
 def read_data_sets(train_dir,
@@ -245,32 +215,29 @@ def read_data_sets(train_dir,
   with open(local_file, 'rb') as f:
     test_labels = extract_labels(f, one_hot=one_hot)
 
-  if not 0 <= validation_size <= len(train_images):
-    raise ValueError(
-        'Validation size should be between 0 and {}. Received: {}.'
-        .format(len(train_images), validation_size))
+  print("Number of bytes found = "  + str(len(train_images.tostring())) + " num_images=" + str(train_images.shape[0]))
 
+  train_images, train_labels = filter_subset(train_images, train_labels, subset, dtype)
+  test_images, test_labels = filter_subset(test_images, test_labels, subset, dtype)
+  print("Number of bytes found  after filter= "  + str(len(train_images.tostring())) + " num_images=" + str(train_images.shape[0]))
+
+  train_labels = remapping(train_labels, subset)
+  test_labels = remapping(test_labels, subset)
+
+
+  validation_size = min(validation_size, int(len(train_images)/9))
   validation_images = train_images[:validation_size]
   validation_labels = train_labels[:validation_size]
   train_images = train_images[validation_size:]
   train_labels = train_labels[validation_size:]
 
-  print("Number of bytes found = "  + str(len(train_images.tostring())) + " num_images=" + str(train_images.shape[0]))
+  train_images, train_labels = balance_data(train_images, train_labels, len(subset))
+  validation_images, validation_labels = balance_data(validation_images, validation_labels, len(subset))
+  test_images, test_labels = balance_data(test_images, test_labels, len(subset))
 
-  train_images, train_labels = filter_subset(train_images, train_labels, subset, dtype)
-  validation_images,validation_labels = filter_subset(validation_images, validation_labels, subset, dtype)
-  test_images, test_labels = filter_subset(test_images, test_labels, subset, dtype)
-
-  print("Number of bytes found  after filter= "  + str(len(train_images.tostring())) + " num_images=" + str(train_images.shape[0]))
-
-  train_labels = remapping(train_labels, subset)
-  validation_labels = remapping(validation_labels, subset)
-  test_labels = remapping(test_labels, subset)
-
-  options = dict(dtype=dtype, reshape=reshape, seed=seed)
-  train = DataSet(train_images, train_labels, **options)
-  validation = DataSet(validation_images, validation_labels, **options)
-  test = DataSet(test_images, test_labels, **options)
+  train = DataSet(train_images, train_labels)
+  validation = DataSet(validation_images, validation_labels)
+  test = DataSet(test_images, test_labels)
   return {'train':train, 'validation':validation, 'test':test}
 
 

@@ -6,23 +6,33 @@ import shutil
 import sys
 import time
 
-from .constants import NROW
-from .data_util import read_expected_result
-from .mnist_util import convert_to_mnist
-from .models import Cell
-from .models import ImageSheet
-from .models import UserNeuralNet
-from .sagemaker_util import *
 from PIL import Image, ImageFilter
 from background_task import background
+from catalog.constants import *
+from catalog.data_util import *
+from catalog.emnist import *
+from catalog.mnist_util import *
+from catalog.models import *
 from catalog.path_util import *
+from catalog.sagemaker_util import *
+from catalog.serializers import UserSerializer, GroupSerializer
+from catalog.tasks import *
+from django import template
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User, Group
 from django.core.files import File
+from django.core.files.storage import FileSystemStorage
 from django.core.files.storage import default_storage
 from django.db import IntegrityError
 from django.db import transaction
+from django.shortcuts import render
+from django.utils import timezone
 from pathlib import Path
+from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from sagemaker import Session
 from sagemaker.tensorflow import TensorFlow
 from sagemaker.utils import name_from_image
@@ -153,7 +163,7 @@ def training_local_data(user_name):
     
 def train_data(
     inputs, role, job_name, instance_type='ml.c4.xlarge', instance_count=1, 
-    training_steps=20000, evaluation_steps=5000, 
+    training_steps=20000, evaluation_steps=100, 
     debug=False, debug_job_name='nghia-2018-04-06-1'):
     mnist_estimator = TensorFlow(#entry_point='/home/0ec2-user/sample-notebooks/sagemaker-python-sdk/tensorflow_distributed_mnist/mnist.py',
                                 entry_point='/Users/nghia/rec_table/web/turk/catalog/mnist_sagemaker.py',
@@ -203,24 +213,67 @@ def update_endpoint(model, user_name, production_variant):
         model.sagemaker_session.endpoint_from_production_variants(endpoint_name, [production_variant], wait=False)
 
 #@background(schedule=1)
-def upload_new_training_record(user_name, train_filename, validation_filename, test_filename):
+def upload_new_training_record(user_name):
+    training_image_dir = get_local_train_folder(user_name)
+    test_image_dir = training_image_dir
+    result_folder = get_mnist_local_folder(user_name)
+
+    # Download default emnist
+    download_default_emnist()
+
+    # Convert local images to mnist data
+    convert_to_mnist(training_image_dir, test_image_dir, result_folder, ACCEPTED_LABEL) 
+
+    # Convert MNIST Format to TFRecord
+    #subset = [2,3,6,7,9]
+    origin_subset = ['I', 'K', 'R', 'i', 'k', 'r']
+    subset = []
+    for character in origin_subset:
+        subset.append(char_to_label_index(character))
+    print("subset=", subset)
+    user_data_sets = read_data_sets(
+        result_folder, dtype=dtypes.uint8, subset = subset, validation_size=100)
+    emnist_folder = get_emnist_cache_folder()
+    default_data_sets = read_data_sets(
+        emnist_folder, prefix="emnist-byclass-", dtype=dtypes.uint8, subset=subset, validation_size=5000)
+
+    data_types = ['train', 'validation', 'test']
+    data_sets = {}
+    for data_type in data_types:
+        data_sets[data_type] = merge_data_set(user_data_sets[data_type], default_data_sets[data_type])
+        print("data_sets[", data_type, "].images.shape=",data_sets[data_type].images.shape)
+
+    local_tf_record_folder = get_local_tf_record_folder(user_name)
+    if os.path.exists(local_tf_record_folder): 
+        shutil.rmtree(local_tf_record_folder)
+    os.makedirs(local_tf_record_folder)
+
+    train_filename = convert_to(data_sets['train'], 'train', local_tf_record_folder)
+    validation_filename = convert_to(data_sets['validation'], 'validation', local_tf_record_folder)
+    test_filename = convert_to(data_sets['test'], 'test', local_tf_record_folder)
+
+    return
     #Upload file to S3
     s3_folder = get_s3_folder_bucket_training_data(user_name)
     train_s3 = os.path.join(s3_folder, os.path.split(train_filename)[1])
     validation_s3 = os.path.join(s3_folder, os.path.split(validation_filename)[1])
     test_s3 = os.path.join(s3_folder, os.path.split(test_filename)[1])
-    if False:
+
+    if True:
+        print("Start to upload file to S3")
         upload_file(train_s3, train_filename)
         print("Uploaded to : " + train_s3)
         upload_file(validation_s3, validation_filename)
         print("Uploaded to : " + validation_s3)
         upload_file(test_s3, test_filename)
         print("Uploaded to : " + test_s3)
+    
+    return
 
     # Setup settings
     print("Start training now for user_name=" + user_name)
     inputs = get_input_training_s3(user_name) 
-    print("Train data inputs=" + inputs)
+    print("inputs=" + inputs)
     instance_type =  settings.SAGEMAKER_INSTANCE_TYPE
     initial_instance_count = settings.SAGEMAKER_INITIAL_INSTANCE_COUNT
     role = settings.SAGEMAKER_ROLE
@@ -230,7 +283,7 @@ def upload_new_training_record(user_name, train_filename, validation_filename, t
 
     # Train Data
     mnist_estimator = train_data(
-        inputs, role, job_name, instance_type = instance_type, training_steps=300, evaluation_steps=10)
+        inputs, role, job_name, instance_type = instance_type, training_steps=10000, evaluation_steps=100)
     print("Done with fit for job_name=" + job_name)
     if not mnist_estimator:
         print("Error when executing fit on training data")

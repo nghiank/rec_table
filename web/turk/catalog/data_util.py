@@ -120,27 +120,18 @@ def convert_to(data_set, name, directory):
     labels = data_set.labels
     num_examples = data_set.num_examples
 
-    print("Images shape:" + str(images.shape) + " num_examples:" + str(num_examples))
     if images.shape[0] != num_examples:
         raise ValueError('Images size %d does not match label size %d.' %
                          (images.shape[0], num_examples))
     rows = images.shape[1]
     cols = images.shape[2]
     depth = images.shape[3]
-    print("Rows = " + str(rows))
-    print("Cols = " + str(cols))
-    print("Depth = " + str(depth))
     filename = os.path.join(directory, name + '.tfrecords')
-    print('Writing', filename)
+    print('=======Writing', filename)
+    print("Images shape:" + str(images.shape) + " num_examples:" + str(num_examples))
     writer = tf.python_io.TFRecordWriter(filename)
-    cnt = 0
     for index in range(num_examples):
         image_raw = images[index].tostring()
-        if cnt < 10:
-            print("Image raw leng=" + str(len(image_raw)))
-            p = images[index][0][0][0]
-            print("Raw = " + str(sys.getsizeof(p)) + " val=" + str(p))
-            cnt = cnt + 1
         example = tf.train.Example(features=tf.train.Features(feature={
             'height': _int64_feature(rows),
             'width': _int64_feature(cols),
@@ -149,9 +140,11 @@ def convert_to(data_set, name, directory):
             'image_raw': _bytes_feature(image_raw)}))
         writer.write(example.SerializeToString())
     writer.close()
+    print("Write to ", filename, " done")
     return filename
 
 def upload_file(s3_file_name, local_file_name):
+    print("Upload data to S3:", local_file_name, "-->", s3_file_name)
     file = default_storage.open(s3_file_name, 'w')
     with open(local_file_name, 'rb') as f:
         local_file = File(f)
@@ -168,3 +161,16 @@ def write_file(s3_file_name, local_file_name):
             local_file.write(chunk)
     file.close()
     f.close()
+
+# Convert character to label mapping
+def char_to_label_index(c):
+  """
+  '0' -> '9' : 0 -> 9
+  'A' -> 'Z' : 10 -> 35
+  'a' -> 'z' : 36 -> 61
+  """
+  if c>='0' and c<='9':
+    return ord(c) - ord('0')
+  if c>='A' and c<='Z':
+    return ord(c) - ord('A') + 10
+  return ord(c) - ord('a') + 36
