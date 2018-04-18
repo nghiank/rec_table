@@ -9,6 +9,9 @@ LEARNING_RATE = 0.001
 
 
 def model_fn(features, labels, mode, params):
+    
+    # Number of labels:
+    num = params["len_subset"]
     # Input Layer
     input_layer = tf.reshape(features[INPUT_TENSOR_NAME], [-1, 28, 28, 1])
 
@@ -36,10 +39,10 @@ def model_fn(features, labels, mode, params):
     pool2_flat = tf.reshape(pool2, [-1, 7 * 7 * 64])
     dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
     dropout = tf.layers.dropout(
-        inputs=dense, rate=0.4, training=(mode == Modes.TRAIN))
+        inputs=dense, rate=0.5, training=(mode == Modes.TRAIN))
 
     # Logits Layer
-    logits = tf.layers.dense(inputs=dropout, units=10)
+    logits = tf.layers.dense(inputs=dropout, units=num)
 
     # Define operations
     if mode in (Modes.PREDICT, Modes.EVAL):
@@ -50,7 +53,7 @@ def model_fn(features, labels, mode, params):
         global_step = tf.train.get_or_create_global_step()
         label_indices = tf.cast(labels, tf.int32)
         loss = tf.losses.softmax_cross_entropy(
-            onehot_labels=tf.one_hot(label_indices, depth=10), logits=logits)
+            onehot_labels=tf.one_hot(label_indices, depth=num), logits=logits)
         tf.summary.scalar('OptimizeLoss', loss)
 
     if mode == Modes.PREDICT:
@@ -65,7 +68,7 @@ def model_fn(features, labels, mode, params):
             mode, predictions=predictions, export_outputs=export_outputs)
 
     if mode == Modes.TRAIN:
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
+        optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE)
         train_op = optimizer.minimize(loss, global_step=global_step)
         return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)
 
@@ -102,14 +105,14 @@ def read_and_decode(filename_queue):
 
 
 def train_input_fn(training_dir, params):
-    return _input_fn(training_dir, 'train.tfrecords', batch_size=100)
+    return _input_fn(training_dir, 'train.tfrecords', batch_size=50)
 
 
 def eval_input_fn(training_dir, params):
-    return _input_fn(training_dir, 'test.tfrecords', batch_size=100)
+    return _input_fn(training_dir, 'test.tfrecords', batch_size=50)
 
 
-def _input_fn(training_dir, training_filename, batch_size=100):
+def _input_fn(training_dir, training_filename, batch_size=50):
     test_file = os.path.join(training_dir, training_filename)
     filename_queue = tf.train.string_input_producer([test_file])
 

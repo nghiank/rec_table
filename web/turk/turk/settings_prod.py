@@ -10,7 +10,7 @@ TRAINING_DIR = '/opt/python/current/app/train/checkpoint'
 TRAINING_DATA_BUCKET = "training-data-prod"
 
 # Sagemaker settings
-SAGEMAKER_INITIAL_INSTANCE_COUNT = 2
+SAGEMAKER_INITIAL_INSTANCE_COUNT = 1
 SAGEMAKER_ROLE = 'arn:aws:iam::497017843977:role/service-role/AmazonSageMaker-ExecutionRole-20180322T225994'
 SAGEMAKER_INSTANCE_TYPE = 'ml.c4.xlarge'
 

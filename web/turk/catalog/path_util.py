@@ -47,9 +47,9 @@ def get_neural_net_data_folder(user_name):
 def get_mnist_local_folder(user_name):
     return os.path.join(settings.TMP_DIR, user_name, 'mnist')
 
-# Get local tensorflow record folder
-def get_local_tf_record_folder(user_name):
-    return os.path.join(settings.TMP_DIR, user_name, 'tfrecord')
+# Get local tensorflow record folder for each subset
+def get_local_tf_record_folder(user_name, subset_name):
+    return os.path.join(settings.TMP_DIR, user_name, 'tfrecord', subset_name)
 
 def get_mnist_data_file_name(result_folder, name):
     return os.path.join(result_folder, name + '-images-idx3-ubyte')
@@ -57,5 +57,21 @@ def get_mnist_data_file_name(result_folder, name):
 def get_mnist_label_file_name(result_folder, name):
     return os.path.join(result_folder, name + '-labels-idx1-ubyte')
 
-def get_s3_folder_bucket_training_data(user_name):
-    return os.path.join(settings.TRAINING_DATA_BUCKET, user_name, 'mnist')
+def get_s3_folder_bucket_training_data(user_name, subset_name):
+    return os.path.join(settings.TRAINING_DATA_BUCKET, user_name, 'tfrecord', subset_name)
+
+def get_input_training_s3(user_name, origin_subset_name):
+   """
+    Return as : "s3://imagesheet1/training-data-dev/nghia/tfrecord/0_9"
+   """
+   path = "s3://" + settings.AWS_STORAGE_BUCKET_NAME
+   path += "/" + get_s3_folder_bucket_training_data(user_name, origin_subset_name)
+   return path
+
+def get_user_checkpoint(user_name, origin_subset_name):
+    return os.path.join(user_name, 'checkpoint', user_name + '-' + origin_subset_name.replace('_','-') + '-job') 
+
+def get_s3_checkpoint_path(user_name, origin_subset_name):
+    path = "s3://" + settings.AWS_STORAGE_BUCKET_NAME
+    path += "/" + get_user_checkpoint(user_name, origin_subset_name) + "/checkpoints"
+    return path

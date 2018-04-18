@@ -7,6 +7,8 @@ from catalog.path_util import *
 from django.core.files import File
 from django.core.files.storage import default_storage
 import sys
+import boto3
+import botocore
 
 def read_predicted_result(local_output_folder):
     # The result is written in result.txt
@@ -130,6 +132,7 @@ def convert_to(data_set, name, directory):
     print('=======Writing', filename)
     print("Images shape:" + str(images.shape) + " num_examples:" + str(num_examples))
     writer = tf.python_io.TFRecordWriter(filename)
+    #  num_examples = 100
     for index in range(num_examples):
         image_raw = images[index].tostring()
         example = tf.train.Example(features=tf.train.Features(feature={
@@ -144,12 +147,19 @@ def convert_to(data_set, name, directory):
     return filename
 
 def upload_file(s3_file_name, local_file_name):
+    return
     print("Upload data to S3:", local_file_name, "-->", s3_file_name)
     file = default_storage.open(s3_file_name, 'w')
     with open(local_file_name, 'rb') as f:
+        cnt = 0
         local_file = File(f)
+        sz = local_file.size
+        print("File size:", sz)
         for chunk in local_file.chunks():
+            print("Writing chunks:", cnt, "/", sz, " progress=", (float(cnt) / float(sz) * 100.0))
             file.write(chunk)
+            cnt = cnt + 64 * 1024 
+        print("Writing chunks:", sz, "/", sz)
     file.close()
     f.close()
 
@@ -174,3 +184,26 @@ def char_to_label_index(c):
   if c>='A' and c<='Z':
     return ord(c) - ord('A') + 10
   return ord(c) - ord('a') + 36
+
+def check_s3_exist(item_path, bucket_name=settings.AWS_STORAGE_BUCKET_NAME):
+    s3 = boto3.resource('s3')
+    try:
+        s3.Object('my-bucket', 'dootdoot.jpg').load()
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            return False
+    else:
+        return True
+    return False
+
+def copy_s3_folder(src, dst, bucket_name = settings.AWS_STORAGE_BUCKET_NAME):
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket_name)
+    for obj in bucket.objects.filter(Prefix=src):
+        old_source = { 
+            'Bucket': bucket_name,
+            'Key': obj.key}
+        # replace the prefix
+        new_key = obj.key.replace(src, dst)
+        new_obj = bucket.Object(new_key)
+        new_obj.copy(old_source)

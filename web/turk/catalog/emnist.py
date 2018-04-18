@@ -117,13 +117,13 @@ def balance_data(images, labels, num_labels):
   """
   Balance data by making each label has same length with the smallest size.
   """
-  print("Balance the data")
+  #print("Balance the data")
   cnt = [0] * num_labels
   n = labels.shape[0]
   for i in range(n):
     cnt[labels[i]] = cnt[labels[i]] + 1
   mmin = min(cnt)
-  print("cnt=", cnt, " mmin=", mmin)
+  #print("cnt=", cnt, " mmin=", mmin)
   total = mmin * num_labels
   bal = [mmin] * num_labels
   new_images = numpy.zeros((total, images.shape[1], images.shape[2], images.shape[3]), dtype=numpy.uint8)
@@ -136,8 +136,8 @@ def balance_data(images, labels, num_labels):
       new_images[j] = images[i]
       new_labels[j] = label
       j = j + 1
-  print("new_images.shape", new_images.shape)
-  print("new_labels.shape", new_labels.shape)
+  #print("new_images.shape", new_images.shape)
+  #print("new_labels.shape", new_labels.shape)
   # Shuffle the data
   perm = numpy.arange(j)
   numpy.random.shuffle(perm)
@@ -215,7 +215,7 @@ def read_data_sets(train_dir,
   with open(local_file, 'rb') as f:
     test_labels = extract_labels(f, one_hot=one_hot)
 
-  print("Number of bytes found = "  + str(len(train_images.tostring())) + " num_images=" + str(train_images.shape[0]))
+  #print("Number of bytes found = "  + str(len(train_images.tostring())) + " num_images=" + str(train_images.shape[0]))
 
   train_images, train_labels = filter_subset(train_images, train_labels, subset, dtype)
   test_images, test_labels = filter_subset(test_images, test_labels, subset, dtype)
@@ -224,16 +224,15 @@ def read_data_sets(train_dir,
   train_labels = remapping(train_labels, subset)
   test_labels = remapping(test_labels, subset)
 
-
   validation_size = min(validation_size, int(len(train_images)/9))
   validation_images = train_images[:validation_size]
   validation_labels = train_labels[:validation_size]
   train_images = train_images[validation_size:]
   train_labels = train_labels[validation_size:]
 
-  train_images, train_labels = balance_data(train_images, train_labels, len(subset))
-  validation_images, validation_labels = balance_data(validation_images, validation_labels, len(subset))
-  test_images, test_labels = balance_data(test_images, test_labels, len(subset))
+#  train_images, train_labels = balance_data(train_images, train_labels, len(subset))
+#  validation_images, validation_labels = balance_data(validation_images, validation_labels, len(subset))
+#  test_images, test_labels = balance_data(test_images, test_labels, len(subset))
 
   train = DataSet(train_images, train_labels)
   validation = DataSet(validation_images, validation_labels)
