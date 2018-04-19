@@ -59,11 +59,11 @@ def verify(request, id):
 
     prediction_path = os.path.join(os.path.dirname(__file__), '../../run_prediction.sh')
     cmd_activate_tensorflow = "source " + os.path.join(settings.TENSORFLOW_DIR,'tensorflow','bin','activate') 
-    cmd = cmd_activate_tensorflow + " && " + prediction_path + " " + local_file + " " + local_output_folder_cells
+    cmd = cmd_activate_tensorflow + " && " + prediction_path + " " + local_file + " " + local_output_folder_cells + " " + user_name
     print("Running prediction: " + cmd)
     result = subprocess.check_output([cmd], shell=True)
     print("Done prediction: " + cmd)
-    #print("Result=" + str(result))
+    print("Result from running prediction:", result)
     predicted_result = read_predicted_result(local_output_folder)
     expected_results = ExpectedResult.objects.filter(image_sheet=item)
     print("Expected result is read...Time to render")

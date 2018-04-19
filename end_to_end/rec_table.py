@@ -3,6 +3,9 @@ from subprocess import Popen, PIPE
 from PIL import Image, ImageFilter
 import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+import boto3
+from sagemaker.tensorflow import  TensorFlowPredictor
 
 num_row = 60
 row = [dict() for x in range(num_row+1)]
@@ -44,15 +47,54 @@ letter_map = {
     'del': 'X',
 }
 
+endpoint_name_suffix = {
+    'day': '2-3-6-7-9-ep',
+    'num': '0-9-x-ep',
+    'big': '0-9-ep',
+    'small': '0-9-ep',
+    'roll': 'i-k-r-ep',
+}
+mnist_predictors = {
+    'day': None,
+    'num': None,
+    'big': None,
+    'small': None,
+    'roll': None,
+    'del': None
+} 
+
 #input_filename = "/Users/nghia/rec_table/train/data/test/g.png"
+user_name = "nghia"
 input_filename = "/Users/nghia/Downloads/a.jpg"
 extract_cell_folder = "/Users/nghia/Desktop/tmp"
 trained_data_folder = "../train/checkpoint"
 
-if len(sys.argv) == 3:
+if len(sys.argv) == 4:
     input_filename = sys.argv[1]
     extract_cell_folder = sys.argv[2]
+    user_name = sys.argv[3]
+
 fileNamePrefix = 'file'
+client = boto3.client('sagemaker')
+
+def check_endpoint_exists(endpoint_name):
+    try:
+        response = client.describe_endpoint(
+            EndpointName=endpoint_name
+        ) 
+        #print("describe_endpoint=", response)
+        return response and ('EndpointArn' in response)
+    except:
+        return False
+
+for key in endpoint_name_suffix:
+    endpoint_name = user_name + "-" + endpoint_name_suffix[key]
+    if check_endpoint_exists(endpoint_name):
+        mnist_predictors[key] = TensorFlowPredictor(endpoint_name)
+    else:
+        default_endpoint_name = "common-" + endpoint_name_suffix[key]
+        mnist_predictors[key] = TensorFlowPredictor(default_endpoint_name)
+
 
 def verify_input():
     global input_filename
@@ -119,6 +161,19 @@ def predict(filenames, trained_filename, letter_map):
                 v_ = session.run(predict, feed_dict = {"x:0": [img], "keep_prob:0": 1.0}) 
                 res[idx] = letter_map[v_[0]]
     return res
+
+def sagemaker_predict(filenames, trained_filename, letter_map, mnist_predictor):
+    res = [None] * len(filenames)
+    for idx, filename in enumerate(filenames):
+        if not os.path.isfile(filename):
+            continue
+        data = imageprepare(filename)
+        tensor_proto = tf.make_tensor_proto(values=np.asarray(data), shape=[1, len(data)], dtype=tf.float32)
+        predict_response = mnist_predictor.predict(tensor_proto)
+        prediction = predict_response['outputs']['classes']['int64Val'][0]
+        print("Prediction:", letter_map[int(prediction)])
+        res[idx] = letter_map[int(prediction)]
+    return res
  
 def extract_cell():
     print_header("Extracting cell process")
@@ -145,7 +200,7 @@ def isCellExist(ind):
 
 def get_day():
     if isCellExist(0):
-        return predict([getFileName(0)], getTrainFileName('day'), letter_map['day'])
+        return sagemaker_predict([getFileName(0)], getTrainFileName('day'), letter_map['day'], mnist_predictors['day'])
     return [0] 
 
 def predictCells(types):
@@ -156,6 +211,7 @@ def predictCells(types):
     print("Predict for the columns:", types)
     train_file_name = getTrainFileName(types[0])
     the_map = letter_map[types[0]]
+    mnist_predictor = mnist_predictors[types[0]]
     print("Train file name:", train_file_name)
     print("The letter map:", the_map)
 
@@ -197,7 +253,7 @@ def predictCells(types):
             if os.path.isfile(filenames[i]):
                 res_predict[i] = 'X'
     else:
-        res_predict = predict(filenames, train_file_name, the_map)
+        res_predict = sagemaker_predict(filenames, train_file_name, the_map, mnist_predictor)
     # Debugging purpose
     '''
     for i in range(len(res_predict)):

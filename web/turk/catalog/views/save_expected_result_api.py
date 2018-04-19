@@ -109,5 +109,4 @@ def save_expected_result(request, id):
     except IntegrityError: 
         return Response("Save error", status=status.HTTP_200_OK)
 
-
-    return Response("Your expected result is saved successfully - Go to filter to manually filter wrong images", status=status.HTTP_200_OK)
+    return Response("Your new characters result are saved - Go to 'Filter' to manually filter wrong images to start training the neuron", status=status.HTTP_200_OK)

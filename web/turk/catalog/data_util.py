@@ -92,7 +92,6 @@ def get_all_local_data_for_user(user_name):
         if label not in ACCEPTED_LABEL:
             continue
         dirname = os.path.join(local_image_folder, label)
-        print("Label name = " + dirname)
         for file in os.listdir(dirname):
             _, extension = os.path.splitext(file)
             if extension not in [".png", ".jpg", "jpeg"]:
@@ -147,7 +146,6 @@ def convert_to(data_set, name, directory):
     return filename
 
 def upload_file(s3_file_name, local_file_name):
-    return
     print("Upload data to S3:", local_file_name, "-->", s3_file_name)
     file = default_storage.open(s3_file_name, 'w')
     with open(local_file_name, 'rb') as f:

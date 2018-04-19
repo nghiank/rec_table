@@ -62,7 +62,7 @@ def get_s3_folder_bucket_training_data(user_name, subset_name):
 
 def get_input_training_s3(user_name, origin_subset_name):
    """
-    Return as : "s3://imagesheet1/training-data-dev/nghia/tfrecord/0_9"
+    Return as : "s3://imagesheet1/training-data-dev/nghia/tfrecord/0-9"
    """
    path = "s3://" + settings.AWS_STORAGE_BUCKET_NAME
    path += "/" + get_s3_folder_bucket_training_data(user_name, origin_subset_name)

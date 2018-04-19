@@ -42,11 +42,11 @@ from shutil import copyfile
 from time import gmtime, strftime
 
 # upload, create_training_job, create_endpoint
-ENABLE_STAGE = True
+ENABLE_STAGE = False
 STAGE_UPLOAD = "upload"
 STAGE_JOB = "create_training_job"
 STAGE_CREATE_ENDPOINT = "create_endpoint"
-STAGE = STAGE_JOB
+STAGE = STAGE_UPLOAD
 
 attr = ['num', 'big', 'small', 'roll', 'del']
 max_length = [
@@ -134,7 +134,7 @@ def get_tensorflow_(
     evaluation_steps=100, 
     instance_type='ml.c4.xlarge', 
     instance_count=1):
-    mnist_estimator = TensorFlow(#entry_point='/home/0ec2-user/sample-notebooks/sagemaker-python-sdk/tensorflow_distributed_mnist/mnist.py',
+    mnist_estimator = TensorFlow(
                                 entry_point='/Users/nghia/rec_table/web/turk/catalog/mnist_sagemaker.py',
                                 role=role,
                                 checkpoint_path = checkpoint_path,
@@ -251,20 +251,15 @@ def get_mapping_index_(origin_subset):
 def to_local_tf_record_(user_name, result_folder, origin_subset_name, origin_subset):
     subset = get_mapping_index_(origin_subset)
     print("subset=", subset)
-    if user_name != DEFAULT_USERNAME:
-        user_data_sets = read_data_sets(
-            result_folder, dtype=dtypes.uint8, subset = subset, validation_size=100)
-    emnist_folder = get_emnist_cache_folder()
-    default_data_sets = read_data_sets(
-        emnist_folder, prefix="emnist-byclass-", dtype=dtypes.uint8, subset=subset, validation_size=5000)
-    # Merge default and user data set
     data_types = ['train', 'validation', 'test']
     data_sets = {}
     if user_name != DEFAULT_USERNAME:
-        for data_type in data_types:
-            data_sets[data_type] = merge_data_set(user_data_sets[data_type], default_data_sets[data_type])
+        data_sets = read_data_sets(
+            result_folder, dtype=dtypes.uint8, subset = subset, validation_size=100)
     else:
-        data_sets = default_data_sets
+        emnist_folder = get_emnist_cache_folder()
+        data_sets = read_data_sets(
+            emnist_folder, prefix="emnist-byclass-", dtype=dtypes.uint8, subset=subset, validation_size=5000)
 
     local_tf_record_folder = get_local_tf_record_folder(user_name, origin_subset_name) 
     if os.path.exists(local_tf_record_folder): 
@@ -319,7 +314,7 @@ def upload_and_train_(user_name, result_folder, origin_subset_name, origin_subse
     mnist_estimator = train_data_(
         inputs, role, job_name, len(origin_subset), 
         user_checkpoint_path,
-        instance_type = instance_type, training_steps=20000, evaluation_steps=100)
+        instance_type = instance_type, training_steps=9000, evaluation_steps=100)
     print("Done with fit for job_name=" + job_name)
     if not mnist_estimator:
         print("Error when executing fit on training data\n\n\n")
