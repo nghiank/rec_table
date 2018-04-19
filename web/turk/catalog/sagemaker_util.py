@@ -6,7 +6,7 @@ from catalog.constants import *
 
 # Job name will be the same within an hour 
 def get_job_name(user_name, original_subset_name):
-    timestamp = time.strftime('%Y-%m-%d-%H-2', time.gmtime())
+    timestamp = time.strftime('%Y-%m-%d-%H-4', time.gmtime())
     return  user_name + "-" + original_subset_name.replace("_", "-") + "-" + timestamp + "-job"
 
 # Get the predictor endpoint name

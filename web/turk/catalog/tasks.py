@@ -310,11 +310,12 @@ def upload_and_train_(user_name, result_folder, origin_subset_name, origin_subse
     prepare_checkpoint_(origin_subset_name, user_name)
     # Train Data
     user_checkpoint_path = get_s3_checkpoint_path(user_name, origin_subset_name)
-    print("S3 USercheckpoint = ", user_checkpoint_path)
+    print("S3 Usercheckpoint = ", user_checkpoint_path)
+    print("Inputs tfrecord path = ", inputs)
     mnist_estimator = train_data_(
         inputs, role, job_name, len(origin_subset), 
         user_checkpoint_path,
-        instance_type = instance_type, training_steps=9000, evaluation_steps=100)
+        instance_type = instance_type, training_steps=22000, evaluation_steps=100)
     print("Done with fit for job_name=" + job_name)
     if not mnist_estimator:
         print("Error when executing fit on training data\n\n\n")

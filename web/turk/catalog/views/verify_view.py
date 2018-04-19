@@ -63,7 +63,7 @@ def verify(request, id):
     print("Running prediction: " + cmd)
     result = subprocess.check_output([cmd], shell=True)
     print("Done prediction: " + cmd)
-    print("Result from running prediction:", result)
+    print("Result from running prediction:", result.decode('ascii'))
     predicted_result = read_predicted_result(local_output_folder)
     expected_results = ExpectedResult.objects.filter(image_sheet=item)
     print("Expected result is read...Time to render")

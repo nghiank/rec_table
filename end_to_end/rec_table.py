@@ -90,10 +90,12 @@ def check_endpoint_exists(endpoint_name):
 for key in endpoint_name_suffix:
     endpoint_name = user_name + "-" + endpoint_name_suffix[key]
     if check_endpoint_exists(endpoint_name):
+        print("Endpoint name for ", key," -> ", endpoint_name)
         mnist_predictors[key] = TensorFlowPredictor(endpoint_name)
     else:
         default_endpoint_name = "common-" + endpoint_name_suffix[key]
         mnist_predictors[key] = TensorFlowPredictor(default_endpoint_name)
+        print("Endpoint name for ", key," -> ", default_endpoint_name)
 
 
 def verify_input():
@@ -171,7 +173,6 @@ def sagemaker_predict(filenames, trained_filename, letter_map, mnist_predictor):
         tensor_proto = tf.make_tensor_proto(values=np.asarray(data), shape=[1, len(data)], dtype=tf.float32)
         predict_response = mnist_predictor.predict(tensor_proto)
         prediction = predict_response['outputs']['classes']['int64Val'][0]
-        print("Prediction:", letter_map[int(prediction)])
         res[idx] = letter_map[int(prediction)]
     return res
  
