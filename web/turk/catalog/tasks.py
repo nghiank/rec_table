@@ -1,5 +1,6 @@
 import boto3
 import json
+import re
 import os
 import sagemaker
 import shutil
@@ -138,6 +139,7 @@ def get_tensorflow_(
                                 entry_point='/Users/nghia/rec_table/web/turk/catalog/mnist_sagemaker.py',
                                 role=role,
                                 checkpoint_path = checkpoint_path,
+                                #train_max_run = 10 * 60,  # Let it run 10mins only
                                 training_steps=training_steps, 
                                 evaluation_steps=evaluation_steps,
                                 train_instance_count=instance_count,
@@ -255,7 +257,7 @@ def to_local_tf_record_(user_name, result_folder, origin_subset_name, origin_sub
     data_sets = {}
     if user_name != DEFAULT_USERNAME:
         data_sets = read_data_sets(
-            result_folder, dtype=dtypes.uint8, subset = subset, validation_size=100)
+            result_folder, dtype=dtypes.uint8, subset = subset, validation_size=5000)
     else:
         emnist_folder = get_emnist_cache_folder()
         data_sets = read_data_sets(
@@ -290,7 +292,15 @@ def upload_tfrecord_(user_name, result_folder, origin_subset_name, origin_subset
     upload_file(test_s3, test_filename)
     print("Uploaded to : " + test_s3)
 
+def get_global_step_(checkpoint_path):
+    s3 = boto3.resource('s3')
+    obj = s3.Bucket(settings.AWS_STORAGE_BUCKET_NAME).Object('nghia/checkpoint/nghia-0-9-job/checkpoints/checkpoint')
+    res = obj.get()['Body'].read().decode('utf-8') 
+    first_line = res.split('\n', 1)[0]
+    return int(re.search('(?<=ckpt-)\d+', first_line).group(0))
+
 def upload_and_train_(user_name, result_folder, origin_subset_name, origin_subset):
+
     if ENABLE_STAGE and STAGE==STAGE_UPLOAD:
         upload_tfrecord_(user_name, result_folder, origin_subset_name, origin_subset)
     if not ENABLE_STAGE:
@@ -312,10 +322,12 @@ def upload_and_train_(user_name, result_folder, origin_subset_name, origin_subse
     user_checkpoint_path = get_s3_checkpoint_path(user_name, origin_subset_name)
     print("S3 Usercheckpoint = ", user_checkpoint_path)
     print("Inputs tfrecord path = ", inputs)
+
+    cur_training_steps = get_global_step_(user_checkpoint_path) + 3000
     mnist_estimator = train_data_(
         inputs, role, job_name, len(origin_subset), 
         user_checkpoint_path,
-        instance_type = instance_type, training_steps=22000, evaluation_steps=100)
+        instance_type = instance_type, training_steps=cur_training_steps, evaluation_steps=100)
     print("Done with fit for job_name=" + job_name)
     if not mnist_estimator:
         print("Error when executing fit on training data\n\n\n")

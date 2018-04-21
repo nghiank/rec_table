@@ -224,7 +224,7 @@ def read_data_sets(train_dir,
   train_labels = remapping(train_labels, subset)
   test_labels = remapping(test_labels, subset)
 
-  validation_size = min(validation_size, int(len(train_images)/9))
+  validation_size = min(validation_size, int(len(train_images)/3))
   validation_images = train_images[:validation_size]
   validation_labels = train_labels[:validation_size]
   train_images = train_images[validation_size:]
