@@ -34,7 +34,6 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'background_task',
     'catalog.apps.CatalogConfig', 
-    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -110,7 +109,7 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 # AWS S3 settings
 AWS_ACCESS_KEY_ID = os.environ.get('aws_key_id')
 AWS_SECRET_ACCESS_KEY = os.environ.get('aws_secret')
-AWS_STORAGE_BUCKET_NAME = 'imagesheet1'
+AWS_STORAGE_BUCKET_NAME = 'imagesheet2'
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
@@ -133,16 +132,6 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-    },
-}
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "asgi_redis.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
-        },
-        "ROUTING": "catalog.routing.channel_routing",
     },
 }
 
