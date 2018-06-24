@@ -2,7 +2,7 @@ import boto3
 import json
 import re
 import os
-import sagemaker
+#import sagemaker
 import shutil
 import sys
 import time
@@ -36,9 +36,9 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from sagemaker import Session
-from sagemaker.tensorflow import TensorFlow
-from sagemaker.utils import name_from_image
+#from sagemaker import Session
+#from sagemaker.tensorflow import TensorFlow
+#from sagemaker.utils import name_from_image
 from shutil import copyfile
 from time import gmtime, strftime
 
@@ -343,17 +343,27 @@ def upload_and_train_(user_name, result_folder, origin_subset_name, origin_subse
 
     update_endpoint(job_name, model, model_name, user_name, origin_subset_name)
 
-@background(schedule=1)
+#@background(schedule=1)
 def upload_new_training_record(user_name, origin_subset_name, origin_subset):
+
+    # TODO: Detect if any background job for re-training is running for current user
+
+
     training_image_dir = get_local_train_folder(user_name)
     test_image_dir = training_image_dir
     result_folder = get_mnist_local_folder(user_name)
 
     # Download default emnist
-    download_default_emnist()
+    #download_default_emnist()
 
-    # Convert local images to mnist data
+    # Convert local images to mnist data and put it in result_folder
     if user_name != "common":
         convert_to_mnist(training_image_dir, test_image_dir, result_folder, ACCEPTED_LABEL) 
 
-    upload_and_train_(user_name, result_folder, origin_subset_name, origin_subset)
+    user_model_folder = get_neural_net_data_folder(user_name)
+    copy_neural_net(user_model_folder)
+
+    # Check if S3 has existing user model to sync it up with local folder
+
+
+    #upload_and_train_(user_name, result_folder, origin_subset_name, origin_subset)
