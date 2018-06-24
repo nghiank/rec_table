@@ -61,7 +61,10 @@ def verify(request, id):
     cmd_activate_tensorflow = "source " + os.path.join(settings.TENSORFLOW_DIR,'tensorflow','bin','activate') 
     cmd = cmd_activate_tensorflow + " && " + prediction_path + " " + local_file + " " + local_output_folder_cells + " " + user_name
     print("Running prediction: " + cmd)
-    result = subprocess.check_output([cmd], shell=True)
+    try:
+        result = subprocess.check_output([cmd], shell=True)
+    except subprocess.CalledProcessError as e:
+        print("Exception happned in the prediction : " + e.output)
     print("Done prediction: " + cmd)
     print("Result from running prediction:", result.decode('ascii'))
     predicted_result = read_predicted_result(local_output_folder)

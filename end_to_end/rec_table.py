@@ -5,7 +5,6 @@ import tensorflow as tf
 import numpy as np
 import tensorflow as tf
 import boto3
-from sagemaker.tensorflow import  TensorFlowPredictor
 
 num_row = 60
 row = [dict() for x in range(num_row+1)]
@@ -29,6 +28,7 @@ max_length = {
     'del' : 1
 }
 
+# Train data's name
 train_data = {
     'day': '2_3_6_7_9',
     'num': '0_9_x_X',
@@ -38,6 +38,7 @@ train_data = {
     'del': 'dummy',
 }
 
+# Letter mapping.
 letter_map = {
     'day': '23679',
     'num': '0123456789xX',
@@ -47,26 +48,32 @@ letter_map = {
     'del': 'X',
 }
 
-endpoint_name_suffix = {
-    'day': '2-3-6-7-9-ep',
-    'num': '0-9-x-ep',
-    'big': '0-9-ep',
-    'small': '0-9-ep',
-    'roll': 'i-k-r-ep',
-}
-mnist_predictors = {
-    'day': None,
-    'num': None,
-    'big': None,
-    'small': None,
-    'roll': None,
-    'del': None
-} 
+# endpoint_name_suffix = {
+#     'day': '2-3-6-7-9-ep',
+#     'num': '0-9-x-ep',
+#     'big': '0-9-ep',
+#     'small': '0-9-ep',
+#     'roll': 'i-k-r-ep',
+# }
+# mnist_predictors = {
+#    'day': None,
+#    'num': None,
+#    'big': None,
+#    'small': None,
+#    'roll': None,
+#    'del': None
+#} 
 
 #input_filename = "/Users/nghia/rec_table/train/data/test/g.png"
 user_name = "nghia"
 input_filename = "/Users/nghia/Downloads/a.jpg"
 extract_cell_folder = "/Users/nghia/Desktop/tmp"
+
+# Model training data folder for default case
+# Each new user will use this to predict the 
+# new data. Once user run their own training data set
+# new model data will be generated for the user. 
+# This model is will be stored on the S3.
 trained_data_folder = "../train/checkpoint"
 
 if len(sys.argv) == 4:
@@ -75,28 +82,25 @@ if len(sys.argv) == 4:
     user_name = sys.argv[3]
 
 fileNamePrefix = 'file'
-client = boto3.client('sagemaker')
-
-def check_endpoint_exists(endpoint_name):
-    try:
-        response = client.describe_endpoint(
-            EndpointName=endpoint_name
-        ) 
-        #print("describe_endpoint=", response)
-        return response and ('EndpointArn' in response)
-    except:
-        return False
-
-for key in endpoint_name_suffix:
-    endpoint_name = user_name + "-" + endpoint_name_suffix[key]
-    if check_endpoint_exists(endpoint_name):
-        print("Endpoint name for ", key," -> ", endpoint_name)
-        mnist_predictors[key] = TensorFlowPredictor(endpoint_name)
-    else:
-        default_endpoint_name = "common-" + endpoint_name_suffix[key]
-        mnist_predictors[key] = TensorFlowPredictor(default_endpoint_name)
-        print("Endpoint name for ", key," -> ", default_endpoint_name)
-
+#client = boto3.client('sagemaker')
+#def check_endpoint_exists(endpoint_name):
+#    try:
+#        response = client.describe_endpoint(
+#            EndpointName=endpoint_name
+#        ) 
+#        #print("describe_endpoint=", response)
+#        return response and ('EndpointArn' in response)
+#    except:
+#        return False
+#for key in endpoint_name_suffix:
+#    endpoint_name = user_name + "-" + endpoint_name_suffix[key]
+#    if check_endpoint_exists(endpoint_name):
+#        print("Endpoint name for ", key," -> ", endpoint_name)
+#        mnist_predictors[key] = TensorFlowPredictor(endpoint_name)
+#    else:
+#        default_endpoint_name = "common-" + endpoint_name_suffix[key]
+#        mnist_predictors[key] = TensorFlowPredictor(default_endpoint_name)
+#        print("Endpoint name for ", key," -> ", default_endpoint_name)
 
 def verify_input():
     global input_filename
@@ -193,7 +197,8 @@ def process_id(current_id):
 def getFileName(i):
     return os.path.join(extract_cell_folder, fileNamePrefix + str(i) + '.png')
 
-def getTrainFileName(type):
+# Get the fullpath of the model data based on what type of prediction
+def getModelFileName(type):
     return os.path.join(trained_data_folder, train_data[type])
 
 def isCellExist(ind):
@@ -201,7 +206,7 @@ def isCellExist(ind):
 
 def get_day():
     if isCellExist(0):
-        return sagemaker_predict([getFileName(0)], getTrainFileName('day'), letter_map['day'], mnist_predictors['day'])
+        return sagemaker_predict([getFileName(0)], getModelFileName('day'), letter_map['day'], mnist_predictors['day'])
     return [0] 
 
 def predictCells(types):
@@ -210,9 +215,9 @@ def predictCells(types):
     row[0] = 'aaaaaaaa'
     #Get train data
     print("Predict for the columns:", types)
-    train_file_name = getTrainFileName(types[0])
+    train_file_name = getModelFileName(types[0])
     the_map = letter_map[types[0]]
-    mnist_predictor = mnist_predictors[types[0]]
+    # mnist_predictor = mnist_predictors[types[0]]
     print("Train file name:", train_file_name)
     print("The letter map:", the_map)
 
@@ -254,7 +259,10 @@ def predictCells(types):
             if os.path.isfile(filenames[i]):
                 res_predict[i] = 'X'
     else:
-        res_predict = sagemaker_predict(filenames, train_file_name, the_map, mnist_predictor)
+        # This is using SageMaker but it is too expensive in term of cost
+        # res_predict = sagemaker_predict(filenames, train_file_name, the_map, mnist_predictor)
+        res_predict = predict(filenames, train_file_name, the_map)
+        
     # Debugging purpose
     '''
     for i in range(len(res_predict)):
@@ -339,6 +347,8 @@ def process_table():
     #print row
     #populateRowDelCheck()
 
+######################## Main entry start from here ################
+####################################################################
 if not verify_input():
     print("Invalid input!!!")
     sys.exit()
