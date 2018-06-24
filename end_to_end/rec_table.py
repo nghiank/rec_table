@@ -212,7 +212,6 @@ def get_day():
 def predictCells(types):
     global attr
     global row
-    row[0] = 'aaaaaaaa'
     #Get train data
     print("Predict for the columns:", types)
     train_file_name = getModelFileName(types[0])
