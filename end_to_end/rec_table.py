@@ -206,7 +206,7 @@ def isCellExist(ind):
 
 def get_day():
     if isCellExist(0):
-        return sagemaker_predict([getFileName(0)], getModelFileName('day'), letter_map['day'], mnist_predictors['day'])
+        return predict([getFileName(0)], getModelFileName('day'), letter_map['day'])
     return [0] 
 
 def predictCells(types):
