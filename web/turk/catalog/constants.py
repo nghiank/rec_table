@@ -14,20 +14,22 @@ MAX_LENGTH = [
 ALL_SUBSETS = [
     {
         'name': '0-9',
-        'characters':['0','1','2','3','4','5','6','7','8','9'],   
+        'characters':[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],   
     },
     {
-        'name': '0-9-x',
-        'characters': ['0','1','2','3','4','5','6','7','8','9','X','x'],   
+        'name': '0-9-x-X',
+        #'characters': [0,1,2,3,4,5,6,7,8,9,X,x],   
+        'characters': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 33, 59],   
     },
     {
         'name': '2-3-6-7-9',
-        'characters': ['2', '3', '6', '7', '9'],  
+        'characters': [2, 3, 6, 7, 9],  
 
     },
     {
-        'name': 'i-k-r',
-        'characters': ['I', 'K', 'R', 'i','k','r'],
+        'name': 'rikRIK',
+        #'characters': ['I', 'K', 'R', 'i','k','r'],
+        'characters': [18, 20, 27, 44, 46, 53]  # the number follow the index from emnist dataset
     },
 ]
 

@@ -2,13 +2,12 @@ import boto3
 import json
 import re
 import os
-#import sagemaker
 import shutil
 import sys
 import time
 import boto3
 import botocore
-
+import tensorflow as tf
 from PIL import Image, ImageFilter
 from background_task import background
 from catalog.constants import *
@@ -343,6 +342,37 @@ def upload_and_train_(user_name, result_folder, origin_subset_name, origin_subse
 
     update_endpoint(job_name, model, model_name, user_name, origin_subset_name)
 
+def retrain_newdata(user_name, origin_subset_name, origin_subset):
+    print("===========Starting to retrain data:", ','.join(str(x) for x in origin_subset), "===========")
+    user_model_folder = get_neural_net_data_folder(user_name)
+    trained_filename = os.path.join(user_model_folder, origin_subset_name.replace('-', '_'))
+    print("-->Trained filename:", trained_filename)
+    model_folder_after_retrain = get_neural_net_data_folder_after_retrain(user_name)
+    new_trained_filename = os.path.join(model_folder_after_retrain, origin_subset_name)
+    graph = tf.Graph()
+    session = tf.Session(graph=graph)
+    num_steps = 10
+    mnist_folder = get_mnist_local_folder(user_name)
+    mnist = read_data_sets(mnist_folder, prefix="", subset = origin_subset, one_hot = True)
+    print(mnist)
+    with graph.as_default():
+        new_saver = tf.train.import_meta_graph(trained_filename + '.meta') 
+        new_saver.restore(session, trained_filename)
+        x = graph.get_tensor_by_name("x:0") 
+        y_ = graph.get_tensor_by_name("y_:0")
+        keep_prob = graph.get_tensor_by_name("keep_prob:0")
+        train_step = tf.get_collection("train_step")[0]
+        accuracy = tf.get_collection('accuracy')[0]
+        train_accuracy = 0.0
+        for i in range(num_steps):
+            batch = mnist['train'].next_batch(50) 
+            if i % 10 == 0:
+                train_accuracy = session.run(accuracy, feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0})
+            print('step %d, training accuracy %g' % (i, train_accuracy))    
+            session.run(train_step, feed_dict={'x:0': batch[0], 'y_:0': batch[1], keep_prob: 0.5})
+        #print('test accuracy %g' % session.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))    
+        new_saver.save(session, new_trained_filename)
+
 #@background(schedule=1)
 def upload_new_training_record(user_name, origin_subset_name, origin_subset):
 
@@ -361,9 +391,11 @@ def upload_new_training_record(user_name, origin_subset_name, origin_subset):
         convert_to_mnist(training_image_dir, test_image_dir, result_folder, ACCEPTED_LABEL) 
 
     user_model_folder = get_neural_net_data_folder(user_name)
+    
+    # TODO(nghiaround): Check if S3 has existing user model to sync it up with local folder
     copy_neural_net(user_model_folder)
-
-    # Check if S3 has existing user model to sync it up with local folder
-
+   
+    # Start the training process now.
+    retrain_newdata(user_name, origin_subset_name, origin_subset) 
 
     #upload_and_train_(user_name, result_folder, origin_subset_name, origin_subset)

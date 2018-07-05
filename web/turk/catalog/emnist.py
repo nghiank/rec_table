@@ -85,16 +85,16 @@ def extract_labels(f, one_hot=False, num_classes=62):
     num_items = _read32(bytestream)
     buf = bytestream.read(num_items)
     labels = numpy.frombuffer(buf, dtype=numpy.uint8)
-    if one_hot:
-      return dense_to_one_hot(labels, num_classes)
     return labels
 
 def filter_subset(images, labels, subset, dtype):
     """Filter data only limited to subset"""
     cnt = 0
+    print(subset)
     for i in xrange(labels.shape[0]):
         if labels[i] in subset:
             cnt = cnt + 1
+    print("----------------" + str(cnt))
     nptype = numpy.uint8
     if dtypes is dtypes.float32:
       nptype = numpy.float32 
@@ -148,7 +148,9 @@ def balance_data(images, labels, num_labels):
 class DataSet(object):
   def __init__(self,
                images,
-               labels):
+               labels, 
+               num_classes,
+               reshape = True):
     """
     Construct a DataSet.
     """
@@ -159,8 +161,16 @@ class DataSet(object):
     # Shuffle the data
     perm = numpy.arange(self._num_examples)
     numpy.random.shuffle(perm)
+
+    if reshape:
+        assert images.shape[3] == 1
+        images = images.reshape(images.shape[0], images.shape[1] * images.shape[2])
     self._images = images[perm]
     self._labels = labels[perm]
+    self._labels = dense_to_one_hot(self._labels, num_classes)
+    #print("Shaoe of labels=" + self._labels[0])
+    self._epochs_completed = 0
+    self._index_in_epoch = 0
 
   @property
   def images(self):
@@ -173,6 +183,42 @@ class DataSet(object):
   @property
   def num_examples(self):
     return self._num_examples
+
+  def next_batch(self, batch_size, fake_data=False, shuffle=True):
+    """Return the next `batch_size` examples from this data set."""
+    start = self._index_in_epoch
+    # Shuffle for the first epoch
+    if self._epochs_completed == 0 and start == 0 and shuffle:
+      perm0 = numpy.arange(self._num_examples)
+      numpy.random.shuffle(perm0)
+      self._images = self.images[perm0]
+      self._labels = self.labels[perm0]
+    # Go to the next epoch
+    if start + batch_size > self._num_examples:
+      # Finished epoch
+      self._epochs_completed += 1
+      # Get the rest examples in this epoch
+      rest_num_examples = self._num_examples - start
+      images_rest_part = self._images[start:self._num_examples]
+      labels_rest_part = self._labels[start:self._num_examples]
+      # Shuffle the data
+      if shuffle:
+        perm = numpy.arange(self._num_examples)
+        numpy.random.shuffle(perm)
+        self._images = self.images[perm]
+        self._labels = self.labels[perm]
+      # Start next epoch
+      start = 0
+      self._index_in_epoch = batch_size - rest_num_examples
+      end = self._index_in_epoch
+      images_new_part = self._images[start:end]
+      labels_new_part = self._labels[start:end]
+      return numpy.concatenate((images_rest_part, images_new_part), axis=0) , numpy.concatenate((labels_rest_part, labels_new_part), axis=0)
+    else:
+      self._index_in_epoch += batch_size
+      end = self._index_in_epoch
+      return self._images[start:end], self._labels[start:end]
+
 
 
 # Merge two DataSet
@@ -215,8 +261,6 @@ def read_data_sets(train_dir,
   with open(local_file, 'rb') as f:
     test_labels = extract_labels(f, one_hot=one_hot)
 
-  #print("Number of bytes found = "  + str(len(train_images.tostring())) + " num_images=" + str(train_images.shape[0]))
-
   train_images, train_labels = filter_subset(train_images, train_labels, subset, dtype)
   test_images, test_labels = filter_subset(test_images, test_labels, subset, dtype)
   print("Number of bytes found  after filter= "  + str(len(train_images.tostring())) + " num_images=" + str(train_images.shape[0]))
@@ -234,9 +278,9 @@ def read_data_sets(train_dir,
 #  validation_images, validation_labels = balance_data(validation_images, validation_labels, len(subset))
 #  test_images, test_labels = balance_data(test_images, test_labels, len(subset))
 
-  train = DataSet(train_images, train_labels)
-  validation = DataSet(validation_images, validation_labels)
-  test = DataSet(test_images, test_labels)
+  train = DataSet(train_images, train_labels, len(subset))
+  validation = DataSet(validation_images, validation_labels, len(subset))
+  test = DataSet(test_images, test_labels, len(subset))
   return {'train':train, 'validation':validation, 'test':test}
 
 

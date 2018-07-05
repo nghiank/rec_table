@@ -43,6 +43,10 @@ def get_local_test_folder(user_name):
 def get_neural_net_data_folder(user_name):
     return os.path.join(settings.TMP_DIR, user_name, 'neural')
 
+# Get local neural net data after retraining.
+def get_neural_net_data_folder_after_retrain(user_name):
+    return os.path.join(settings.TMP_DIR, user_name, 'neural_after_retrain')
+
 # Get Mnist data generated from local train folder
 def get_mnist_local_folder(user_name):
     return os.path.join(settings.TMP_DIR, user_name, 'mnist')
