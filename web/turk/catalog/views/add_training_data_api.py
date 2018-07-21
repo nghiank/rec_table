@@ -41,6 +41,5 @@ def add_training_data(request):
         return Response("Error", status=status.HTTP_404_NOT_FOUND)
     # Convert local data folder to MNIST format
     user_name = request.user.get_username()
-    for subset in ALL_SUBSETS:
-        upload_new_training_record(user_name, subset['name'].replace('_','-'), subset['characters'])
+    upload_new_training_record(user_name)
     return Response("Training data task is created successfully and when the task start, it will start to train the neural network", status=status.HTTP_200_OK)

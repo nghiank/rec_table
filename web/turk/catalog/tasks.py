@@ -31,7 +31,7 @@ from django.db import transaction
 from django.shortcuts import render
 from django.utils import timezone
 from pathlib import Path
-from rest_framework import status
+from rest_framework import status 
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -351,7 +351,7 @@ def retrain_newdata(user_name, origin_subset_name, origin_subset):
     new_trained_filename = os.path.join(model_folder_after_retrain, origin_subset_name)
     graph = tf.Graph()
     session = tf.Session(graph=graph)
-    num_steps = 10
+    num_steps = 2 
     mnist_folder = get_mnist_local_folder(user_name)
     mnist = read_data_sets(mnist_folder, prefix="", subset = origin_subset, one_hot = True)
     print(mnist)
@@ -371,31 +371,40 @@ def retrain_newdata(user_name, origin_subset_name, origin_subset):
             print('step %d, training accuracy %g' % (i, train_accuracy))    
             session.run(train_step, feed_dict={'x:0': batch[0], 'y_:0': batch[1], keep_prob: 0.5})
         #print('test accuracy %g' % session.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))    
+        print("Save to new_trained_filename:" + new_trained_filename)
         new_saver.save(session, new_trained_filename)
+        print("<=====Done\n")
 
 #@background(schedule=1)
-def upload_new_training_record(user_name, origin_subset_name, origin_subset):
+def upload_new_training_record(user_name):
 
     # TODO: Detect if any background job for re-training is running for current user
-
-
     training_image_dir = get_local_train_folder(user_name)
     test_image_dir = training_image_dir
     result_folder = get_mnist_local_folder(user_name)
 
-    # Download default emnist
-    #download_default_emnist()
-
-    # Convert local images to mnist data and put it in result_folder
-    if user_name != "common":
-        convert_to_mnist(training_image_dir, test_image_dir, result_folder, ACCEPTED_LABEL) 
-
-    user_model_folder = get_neural_net_data_folder(user_name)
+    local_user_model_folder = get_neural_net_data_folder(user_name)
     
     # TODO(nghiaround): Check if S3 has existing user model to sync it up with local folder
-    copy_neural_net(user_model_folder)
+    remote_model_foldername = get_user_model_remote_folder(user_name)
+    print("local_user_model_folder=" + local_user_model_folder)
+    copy_neural_net(local_user_model_folder)
+    for subset in ALL_SUBSETS:
+        origin_subset_name = subset['name'].replace('-', '_')
+        remote_model_fullname = os.path.join(remote_model_foldername, origin_subset_name)
+        local_model_fullname = os.path.join(local_user_model_folder, origin_subset_name)
+        print("--->Attempt to sync : ")
+        print("remote_model_fullname=" + remote_model_fullname)
+        print("local_model_fullname=" + local_model_fullname)
+        if check_s3_file_exists(remote_model_fullname):
+            print("=======> Overwrite the local_model_fullname=" + local_model_fullname)
+            write_file(remote_model_foldername, local_model_fullname)
+        print("\n")
    
     # Start the training process now.
-    retrain_newdata(user_name, origin_subset_name, origin_subset) 
-
-    #upload_and_train_(user_name, result_folder, origin_subset_name, origin_subset)
+    for subset in ALL_SUBSETS:
+        origin_subset_name = subset['name']
+        origin_subset = subset['characters']
+        retrain_newdata(user_name, origin_subset_name, origin_subset) 
+    user_model_folder = get_neural_net_data_folder(user_name)
+    upload_to_s3folder(user_model_folder, remote_model_foldername)

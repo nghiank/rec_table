@@ -64,6 +64,12 @@ def get_mnist_label_file_name(result_folder, name):
 def get_s3_folder_bucket_training_data(user_name, subset_name):
     return os.path.join(settings.TRAINING_DATA_BUCKET, user_name, 'tfrecord', subset_name)
 
+def get_user_model_remote_folder(user_name):
+   """
+      Return as : "training-data-dev/nghia"
+   """
+   return os.path.join(settings.TRAINING_DATA_BUCKET, user_name)
+
 def get_input_training_s3(user_name, origin_subset_name):
    """
     Return as : "s3://imagesheet1/training-data-dev/nghia/tfrecord/0-9"

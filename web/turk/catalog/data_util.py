@@ -145,6 +145,18 @@ def convert_to(data_set, name, directory):
     print("Write to ", filename, " done")
     return filename
 
+def upload_to_s3folder(local_folder, s3_folder):
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(settings.AWS_STORAGE_BUCKET_NAME)
+    for f in os.listdir(local_folder):
+        filename = os.path.join(local_folder, f)
+        if os.path.isfile(filename):
+            s3_filename = os.path.join(s3_folder, f)
+            data = open(filename, 'rb')
+            print("Uploading..." + filename + " to s3 folder:" + s3_filename)
+            bucket.put_object(Key=s3_filename, Body=data)
+            print("<--Done:" + filename)
+
 def upload_file(s3_file_name, local_file_name):
     print("Upload data to S3:", local_file_name, "-->", s3_file_name)
     file = default_storage.open(s3_file_name, 'w')
@@ -183,16 +195,29 @@ def char_to_label_index(c):
     return ord(c) - ord('A') + 10
   return ord(c) - ord('a') + 36
 
-def check_s3_exist(item_path, bucket_name=settings.AWS_STORAGE_BUCKET_NAME):
+# Check if a folder exists in s3.
+def check_s3_folder_exist(folder_path, bucket_name=settings.AWS_STORAGE_BUCKET_NAME):
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket_name)
+    size = 0
+    for obj in bucket.objects.filter(Prefix=folder_path): 
+        path, filename = os.path.split(obj.key)
+        if not filename:
+            continue
+        size = size + 1
+    print("size=" + str(size))
+    return size > 0
+
+def  check_s3_file_exists(s3_file_path):
     s3 = boto3.resource('s3')
     try:
-        s3.Object('my-bucket', 'dootdoot.jpg').load()
+        s3.Object(settings.AWS_STORAGE_BUCKET_NAME, s3_file_path).load()
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "404":
             return False
-    else:
-        return True
-    return False
+        else:
+            return False
+    return True
 
 def copy_s3_folder(src, dst, bucket_name = settings.AWS_STORAGE_BUCKET_NAME):
     s3 = boto3.resource('s3')
@@ -205,3 +230,13 @@ def copy_s3_folder(src, dst, bucket_name = settings.AWS_STORAGE_BUCKET_NAME):
         new_key = obj.key.replace(src, dst)
         new_obj = bucket.Object(new_key)
         new_obj.copy(old_source)
+
+def download_s3_folder(remote_src, local_dst, bucket_name = settings.AWS_STORAGE_BUCKET_NAME):
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket_name)
+    for obj in bucket.objects.filter(Prefix=remote_src): 
+        path, filename = os.path.split(obj.key)
+        if not filename:
+            continue
+        write_file(obj.key, os.path.join(local_dst, filename))
+        
