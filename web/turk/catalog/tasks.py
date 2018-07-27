@@ -115,10 +115,19 @@ def upload_prediction_images(user_name, id):
     item.save()
     print('FINISHED uploading files to s3!')
 
-def copy_neural_net(dest_folder):
-    if os.path.exists(dest_folder): 
-        shutil.rmtree(dest_folder)
-    shutil.copytree(settings.TRAINING_DIR, dest_folder)
+def copy_folder(src, dst):
+    if os.path.exists(dst): 
+        shutil.rmtree(dst)
+    shutil.copytree(src, dst)
+
+def copy_master_neural_net_from_default():
+    local_user_model_folder = get_neural_net_data_folder(user_name)
+    copy_folder(settings.TRAINING_DIR, local_user_model_folder)
+
+def copy_from_trained_neural_net(src_folder):
+    local_user_model_folder = get_neural_net_data_folder(user_name)
+    copy_folder(src_folder, local_user_model_folder)
+
 
 def send_log(user_name, log_message):
     pass
@@ -388,18 +397,24 @@ def upload_new_training_record(user_name):
     # TODO(nghiaround): Check if S3 has existing user model to sync it up with local folder
     remote_model_foldername = get_user_model_remote_folder(user_name)
     print("local_user_model_folder=" + local_user_model_folder)
-    copy_neural_net(local_user_model_folder)
-    for subset in ALL_SUBSETS:
-        origin_subset_name = subset['name'].replace('-', '_')
-        remote_model_fullname = os.path.join(remote_model_foldername, origin_subset_name)
-        local_model_fullname = os.path.join(local_user_model_folder, origin_subset_name)
-        print("--->Attempt to sync : ")
-        print("remote_model_fullname=" + remote_model_fullname)
-        print("local_model_fullname=" + local_model_fullname)
-        if check_s3_file_exists(remote_model_fullname):
-            print("=======> Overwrite the local_model_fullname=" + local_model_fullname)
-            write_file(remote_model_foldername, local_model_fullname)
-        print("\n")
+
+    model_folder_after_retrain = get_neural_net_data_folder_after_retrain(user_name)
+    if os.path.isdir(model_folder_after_retrain): 
+        copy_from_trained_neural_net(model_folder_after_retrain)
+    else:    
+        copy_master_neural_net_from_default()
+    #
+    #for subset in ALL_SUBSETS:
+    #    origin_subset_name = subset['name'].replace('-', '_')
+    #    remote_model_fullname = os.path.join(remote_model_foldername, origin_subset_name)
+    #    local_model_fullname = os.path.join(local_user_model_folder, origin_subset_name)
+    #    print("--->Attempt to sync : ")
+    #    print("remote_model_fullname=" + remote_model_fullname)
+    #    print("local_model_fullname=" + local_model_fullname)
+    #    if check_s3_file_exists(remote_model_fullname):
+    #        print("=======> Overwrite the local_model_fullname=" + local_model_fullname)
+    #        write_file(remote_model_foldername, local_model_fullname)
+    #    print("\n")
    
     # Start the training process now.
     for subset in ALL_SUBSETS:
