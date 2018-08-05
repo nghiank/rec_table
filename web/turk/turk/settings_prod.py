@@ -53,7 +53,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
-        'MYAPP': {
+        'turk': {
+            'handlers': ['console', 'logfile'],
+            'level': 'DEBUG',
+        },
+        'catalog': {
             'handlers': ['console', 'logfile'],
             'level': 'DEBUG',
         },
