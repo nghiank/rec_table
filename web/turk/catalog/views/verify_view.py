@@ -75,7 +75,7 @@ def verify(request, id):
     try:
         result = subprocess.check_output([cmd], shell=True)
     except subprocess.CalledProcessError as e:
-        print("Exception happned in the prediction : ", e.output)
+        logger.error("Exception happned in the prediction : ", e.output)
     print("Done prediction: ", cmd)
     print("Result from running prediction:", result.decode('ascii'))
     predicted_result = read_predicted_result(local_output_folder)
