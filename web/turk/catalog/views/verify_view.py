@@ -26,6 +26,9 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
 @login_required
 def verify(request, id):
     """
