@@ -94,5 +94,5 @@ DATABASES = {
 }
 
 ALLOWED_HOSTS = [
-    'rec-table-dev.ap-southeast-1.elasticbeanstalk.com',
+    'ec2-54-165-20-212.compute-1.amazonaws.com',
 ]
