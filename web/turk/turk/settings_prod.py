@@ -6,7 +6,7 @@ from os.path import expanduser
 TMP_DIR='/tmp'
 TENSORFLOW_DIR='/tmp'
 DEBUG_LOG_DIR = '/var/log/app_logs'
-TRAINING_DIR = '/opt/python/current/app/train/checkpoint'
+TRAINING_DIR = '/home/ubuntu/rec_table/train/checkpoint'
 TRAINING_DATA_BUCKET = "training-data-prod"
 
 # Sagemaker settings
@@ -63,7 +63,7 @@ LOGGING = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['web/turk/templates'],
+        'DIRS': ['/home/ubuntu/rec_table/web/turk/templates'],
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
