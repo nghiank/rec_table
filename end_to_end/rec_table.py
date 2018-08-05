@@ -74,12 +74,13 @@ extract_cell_folder = "/Users/nghia/Desktop/tmp"
 # new data. Once user run their own training data set
 # new model data will be generated for the user. 
 # This model is will be stored on the S3.
-trained_data_folder = "../train/checkpoint"
+#trained_data_folder = "../train/checkpoint" -> this is passed as parameters now.
 
-if len(sys.argv) == 4:
+if len(sys.argv) == 5:
     input_filename = sys.argv[1]
     extract_cell_folder = sys.argv[2]
     user_name = sys.argv[3]
+    trained_data_folder = sys.argv[4]
 
 fileNamePrefix = 'file'
 #client = boto3.client('sagemaker')

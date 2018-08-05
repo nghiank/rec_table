@@ -1,3 +1,5 @@
+import sys
+import shutil
 import os.path
 import collections
 from PIL import Image, ImageFilter
@@ -6,7 +8,6 @@ from catalog.models import ExpectedResult
 from catalog.path_util import *
 from django.core.files import File
 from django.core.files.storage import default_storage
-import sys
 import boto3
 import botocore
 
@@ -240,3 +241,16 @@ def download_s3_folder(remote_src, local_dst, bucket_name = settings.AWS_STORAGE
             continue
         write_file(obj.key, os.path.join(local_dst, filename))
         
+def copy_master_neural_net_from_default(user_name):
+    local_user_model_folder = get_neural_net_data_folder(user_name)
+    copy_folder(settings.TRAINING_DIR, local_user_model_folder)
+
+def copy_from_trained_neural_net(src_folder, user_name):
+    local_user_model_folder = get_neural_net_data_folder(user_name)
+    copy_folder(src_folder, local_user_model_folder)
+
+def copy_folder(src, dst):
+    if os.path.exists(dst): 
+        shutil.rmtree(dst)
+    shutil.copytree(src, dst)
+

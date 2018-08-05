@@ -24,7 +24,8 @@ from django.utils import timezone
 from pathlib import Path
 from rest_framework import status
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from shutil import copyfile
 
@@ -68,6 +69,7 @@ def move_file_to_training_folder(user_name, id):
     print('FINISHED copied file to training-images!')
 
 @api_view(['POST'])
+@permission_classes((IsAuthenticated, ))
 def save_expected_result(request, id):
     """
     API endpoint to save the expected result

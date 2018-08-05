@@ -5,10 +5,10 @@ import subprocess
 import logging
 
 from catalog.constants import NROW
-from catalog.data_util import read_expected_result, read_predicted_result
+from catalog.data_util import *
 from catalog.models import ExpectedResult
 from catalog.models import ImageSheet
-from catalog.path_util import get_local_output_folder, get_local_output_cells 
+from catalog.path_util import *
 from catalog.serializers import UserSerializer, GroupSerializer
 from django import template
 from django.conf import settings
@@ -59,7 +59,18 @@ def verify(request, id):
 
     prediction_path = os.path.join(os.path.dirname(__file__), '../../run_prediction.sh')
     cmd_activate_tensorflow = "source " + os.path.join(settings.TENSORFLOW_DIR,'tensorflow','bin','activate') 
-    cmd = cmd_activate_tensorflow + " && " + prediction_path + " " + local_file + " " + local_output_folder_cells + " " + user_name
+
+    # Prepare the mode folder for user
+    model_folder_after_retrain = get_neural_net_data_folder_after_retrain(user_name)
+    if os.path.isdir(model_folder_after_retrain): 
+        print("+++++++++++++Copy model from folder:" + model_folder_after_retrain)
+        copy_from_trained_neural_net(model_folder_after_retrain, user_name)
+    else:    
+        print("----------------------------Copy model from default folder-------------")
+        copy_master_neural_net_from_default(user_name)
+    local_user_model_folder = get_neural_net_data_folder(user_name)
+
+    cmd = cmd_activate_tensorflow + " && " + prediction_path + " " + local_file + " " + local_output_folder_cells + " " + user_name + " " + local_user_model_folder
     print("Running prediction: " + cmd)
     try:
         result = subprocess.check_output([cmd], shell=True)

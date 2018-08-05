@@ -10,6 +10,7 @@ import botocore
 import tensorflow as tf
 from PIL import Image, ImageFilter
 from background_task import background
+from background_task.models import Task
 from catalog.constants import *
 from catalog.data_util import *
 from catalog.emnist import *
@@ -114,19 +115,6 @@ def upload_prediction_images(user_name, id):
     item.state = ImageSheet.PROCESSE2
     item.save()
     print('FINISHED uploading files to s3!')
-
-def copy_folder(src, dst):
-    if os.path.exists(dst): 
-        shutil.rmtree(dst)
-    shutil.copytree(src, dst)
-
-def copy_master_neural_net_from_default():
-    local_user_model_folder = get_neural_net_data_folder(user_name)
-    copy_folder(settings.TRAINING_DIR, local_user_model_folder)
-
-def copy_from_trained_neural_net(src_folder):
-    local_user_model_folder = get_neural_net_data_folder(user_name)
-    copy_folder(src_folder, local_user_model_folder)
 
 
 def send_log(user_name, log_message):
@@ -384,10 +372,8 @@ def retrain_newdata(user_name, origin_subset_name, origin_subset):
         new_saver.save(session, new_trained_filename)
         print("<=====Done\n")
 
-#@background(schedule=1)
+@background(schedule=60)
 def upload_new_training_record(user_name):
-
-    # TODO: Detect if any background job for re-training is running for current user
     training_image_dir = get_local_train_folder(user_name)
     test_image_dir = training_image_dir
     result_folder = get_mnist_local_folder(user_name)
@@ -400,9 +386,9 @@ def upload_new_training_record(user_name):
 
     model_folder_after_retrain = get_neural_net_data_folder_after_retrain(user_name)
     if os.path.isdir(model_folder_after_retrain): 
-        copy_from_trained_neural_net(model_folder_after_retrain)
+        copy_from_trained_neural_net(model_folder_after_retrain, user_name)
     else:    
-        copy_master_neural_net_from_default()
+        copy_master_neural_net_from_default(user_name)
     #
     #for subset in ALL_SUBSETS:
     #    origin_subset_name = subset['name'].replace('-', '_')
@@ -420,6 +406,6 @@ def upload_new_training_record(user_name):
     for subset in ALL_SUBSETS:
         origin_subset_name = subset['name']
         origin_subset = subset['characters']
-        retrain_newdata(user_name, origin_subset_name, origin_subset) 
+        retrain_newdata(user_name, origin_subset_name.replace('-', '_'), origin_subset) 
     user_model_folder = get_neural_net_data_folder(user_name)
     upload_to_s3folder(user_model_folder, remote_model_foldername)
