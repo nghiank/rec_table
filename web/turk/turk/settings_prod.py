@@ -3,7 +3,7 @@ from .base import *
 from os.path import expanduser
 
 # Training settings
-TMP_DIR='/tmp'
+TMP_DIR='/home/ubuntu/tmp'
 TENSORFLOW_DIR='/tmp'
 DEBUG_LOG_DIR = '/var/log/app_logs'
 TRAINING_DIR = '/home/ubuntu/rec_table/train/checkpoint'
