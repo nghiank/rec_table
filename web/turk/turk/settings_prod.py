@@ -57,7 +57,7 @@ LOGGING = {
             'handlers': ['console', 'logfile'],
             'level': 'DEBUG',
         },
-        'catalog': {
+        'catalog.views.verify_view': {
             'handlers': ['console', 'logfile'],
             'level': 'DEBUG',
         },
