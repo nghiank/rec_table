@@ -4,7 +4,7 @@ from os.path import expanduser
 
 # Training settings
 TMP_DIR='/home/ubuntu/tmp'
-TENSORFLOW_DIR='/tmp'
+TENSORFLOW_DIR='/home/ubuntu/tmp'
 DEBUG_LOG_DIR = '/var/log/app_logs'
 TRAINING_DIR = '/home/ubuntu/rec_table/train/checkpoint'
 TRAINING_DATA_BUCKET = "training-data-prod"
