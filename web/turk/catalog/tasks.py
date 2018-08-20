@@ -10,7 +10,6 @@ import botocore
 import tensorflow as tf
 from PIL import Image, ImageFilter
 from background_task import background
-from background_task.models import Task
 from catalog.constants import *
 from catalog.data_util import *
 from catalog.emnist import *
@@ -379,6 +378,14 @@ def upload_new_training_record(user_name):
     result_folder = get_mnist_local_folder(user_name)
 
     local_user_model_folder = get_neural_net_data_folder(user_name)
+
+    # Convert user image to mnist folder
+    print("Convert to mnist folder : ")
+    print("--> training_image_dir :", training_image_dir)
+    print("--> test_image_dir : ", test_image_dir)
+    print("--> result_folder : ", result_folder)
+    convert_to_mnist(training_image_dir, test_image_dir, result_folder, ACCEPTED_LABEL) 
+
     
     # TODO(nghiaround): Check if S3 has existing user model to sync it up with local folder
     remote_model_foldername = get_user_model_remote_folder(user_name)

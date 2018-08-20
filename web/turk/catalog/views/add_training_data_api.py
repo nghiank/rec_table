@@ -51,6 +51,7 @@ def add_training_data(request):
     existing_task = Task.objects.filter(creator_object_id=request.user.id, creator_content_type_id=user_type)
     if existing_task.count() == 0:
         upload_new_training_record(user_name, creator=request.user, verbose_name='Training Data')
+        #upload_new_training_record(user_name)
         return Response("Training data task is created successfully and when the task start, it will start to train the neural network", status=status.HTTP_200_OK)
     else:
         return Response("Training data task was already created - you need to try again in few hours", status=status.HTTP_200_OK)
