@@ -1,12 +1,12 @@
 APPNAME=turk
-APPDIR=/home/ubuntu/rec_table/web/$APPNAME/
+APPDIR=/home/ec2-user/rec_table/web/$APPNAME/
 
 LOGFILE=$APPDIR'gunicorn.log'
 ERRORFILE=$APPFIR'gunicorn-error.log'
 
 NUM_WORKERS=3
 
-ADDRESS=172.31.95.59:8000
+ADDRESS=172.31.20.32:8000
 
 cd $APPDIR
 

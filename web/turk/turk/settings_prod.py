@@ -3,10 +3,11 @@ from .base import *
 from os.path import expanduser
 
 # Training settings
-TMP_DIR='/home/ubuntu/tmp'
-TENSORFLOW_DIR='/home/ubuntu/tmp'
+USER='ec2-user'
+TMP_DIR='/home/' + USER + '/tmp'
+TENSORFLOW_DIR='/home/' + USER + '/tmp'
 DEBUG_LOG_DIR = '/var/log/app_logs'
-TRAINING_DIR = '/home/ubuntu/rec_table/train/checkpoint'
+TRAINING_DIR = '/home/' + USER + '/rec_table/train/checkpoint'
 TRAINING_DATA_BUCKET = "training-data-prod"
 
 # Sagemaker settings
@@ -67,7 +68,7 @@ LOGGING = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['/home/ubuntu/rec_table/web/turk/templates'],
+        'DIRS': ['/home/' + USER + '/rec_table/web/turk/templates'],
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -98,5 +99,5 @@ DATABASES = {
 }
 
 ALLOWED_HOSTS = [
-    'ec2-54-165-20-212.compute-1.amazonaws.com',
+    'ec2-54-161-52-25.compute-1.amazonaws.com',
 ]
