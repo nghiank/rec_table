@@ -147,7 +147,9 @@ def convert_to(data_set, name, directory):
     return filename
 
 def upload_to_s3folder(local_folder, s3_folder):
-    s3 = boto3.resource('s3')
+    s3 = boto3.resource('s3',
+     aws_access_key_id=os.environ.get('aws_key_id'),
+     aws_secret_access_key= os.environ.get('aws_secret'))
     bucket = s3.Bucket(settings.AWS_STORAGE_BUCKET_NAME)
     for f in os.listdir(local_folder):
         filename = os.path.join(local_folder, f)
