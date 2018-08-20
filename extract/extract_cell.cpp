@@ -9,7 +9,6 @@
 #include "extract_cell.hpp"
 #include "constants.hpp"
 #include "preprocessing.hpp"
-#include "line_util.hpp"
 #include "debug_util.hpp"
 #include <algorithm>
 #include <iostream>
@@ -182,17 +181,6 @@ bool isBlankCell(const Mat& img) {
     cout << endl;
     return true;
 }
-
-void detectLine(Mat& outerBox, Mat& img, vector<Vec2f>& lines){
-    HoughLines(outerBox, lines, 1, CV_PI/180, HOUGH_LINE_THRESHOLD);
-    for(int i=0;i<lines.size();i++) {
-        drawLine(lines[i], outerBox, CV_RGB(255,255,255));
-    }
-    printf("Number of lines found %lu\n", lines.size());
-    mergeRelatedLines(&lines, outerBox);
-    printf("Number of lines after merged %lu\n", lines.size());
-}
-
 
 void findCellUsingContour(Mat img, Mat outerBox) {
     vector<vector<Point> > contours;
