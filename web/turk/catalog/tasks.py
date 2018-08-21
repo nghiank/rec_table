@@ -10,6 +10,7 @@ import botocore
 import tensorflow as tf
 from PIL import Image, ImageFilter
 from background_task import background
+from catalog.email_util import *
 from catalog.constants import *
 from catalog.data_util import *
 from catalog.emnist import *
@@ -371,8 +372,11 @@ def retrain_newdata(user_name, origin_subset_name, origin_subset):
         new_saver.save(session, new_trained_filename)
         print("<=====Done\n")
 
-@background(schedule=60)
+@background(schedule=1)
 def upload_new_training_record(user_name):
+    user = User.objects.get(username=user_name)
+    if user and user.email:
+        email("Neural network retrain is starting now", user_name, user.email)
     training_image_dir = get_local_train_folder(user_name)
     test_image_dir = training_image_dir
     result_folder = get_mnist_local_folder(user_name)
@@ -386,8 +390,6 @@ def upload_new_training_record(user_name):
     print("--> result_folder : ", result_folder)
     convert_to_mnist(training_image_dir, test_image_dir, result_folder, ACCEPTED_LABEL) 
 
-    
-    # TODO(nghiaround): Check if S3 has existing user model to sync it up with local folder
     remote_model_foldername = get_user_model_remote_folder(user_name)
     print("local_user_model_folder=" + local_user_model_folder)
 
@@ -416,3 +418,5 @@ def upload_new_training_record(user_name):
         retrain_newdata(user_name, origin_subset_name.replace('-', '_'), origin_subset) 
     user_model_folder = get_neural_net_data_folder(user_name)
     upload_to_s3folder(user_model_folder, remote_model_foldername)
+    if user and user.email:
+        email("Neural network retrain is done", user_name, user.email)
