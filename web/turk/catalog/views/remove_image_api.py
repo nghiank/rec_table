@@ -27,13 +27,13 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 @api_view(['POST'])
+@permission_classes((IsAuthenticated, ))
 def remove_image(request, id):
     """
     API endpoint to remove local image
     """
     if request.method != 'POST':
         return Response("Error", status=status.HTTP_404_NOT_FOUND)
-    # Launch task to upload single character image into S3
     user_name = request.user.get_username()
     prefix = "/media/"
     id = id[len(prefix):]
