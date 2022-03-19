@@ -26,7 +26,7 @@ SECRET_KEY = '*vll-t(-ao8njti8^$886^9*!oo2al-25v_4pj1o!rxksp)cg^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['3.22.168.5']
 
 
 # Application definition
