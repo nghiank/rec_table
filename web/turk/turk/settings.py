@@ -2,9 +2,9 @@ import os
 from .base import *
 
 # Training settings
-TMP_DIR='/Users/nghia/tmp'
-TENSORFLOW_DIR='/Users/nghia/tmp'
-TRAINING_DIR = '/Users/nghia/rec_table/train/checkpoint'
+TMP_DIR='/home/ubuntu/tmp'
+TENSORFLOW_DIR='/tmp'
+TRAINING_DIR = '/home/ubuntu/rec_table/train/checkpoint'
 TRAINING_DATA_BUCKET = "training-data-dev"
 
 # Sagemakger setting

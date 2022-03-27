@@ -16,7 +16,6 @@
 #include <unordered_set>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv/cvaux.hpp>
 
 using namespace cv;
 using namespace std;
@@ -186,7 +185,7 @@ void findCellUsingContour(Mat img, Mat outerBox) {
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
     // Find contours
-    findContours( outerBox, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
+    findContours( outerBox, contours, hierarchy, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
     printf("Number of contours found %lu\n", contours.size());
     vector<Point>  approx;
     vector<Point> table;
